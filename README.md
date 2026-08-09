@@ -1,4 +1,5 @@
 # FinTarget-iOS
+Fin-Target Convention
 작업 순서 ✔️
 이슈 생성
 이슈 기반 브랜치 생성
@@ -37,3 +38,4 @@ fix: 정책 null 매칭 버그 수정 (#2)
 chore: application.yml gitignore 처리 (#3)	
 제목은 50자 이내, 한국어 사용
 제목 끝 마침표 생략
+
