@@ -13,7 +13,6 @@ import SwiftUI
 struct OnboardingView: View {
     
     @State private var currentStep: OnboardingStep = .age
-    
     @State private var selectedAge: String? = nil
     @State private var selectedJob: String? = nil
     @State private var selectedIncome: String? = nil

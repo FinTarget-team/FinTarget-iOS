@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		783EFAD4303ACE6400456E2C /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = 783EFAD3303ACE6400456E2C /* CombineMoya */; };
+		783EFAD6303ACE6400456E2C /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = 783EFAD5303ACE6400456E2C /* Moya */; };
+		783EFCCF303D72D400456E2C /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 783EFCCE303D72D400456E2C /* KakaoSDKAuth */; };
+		783EFCD1303D72D400456E2C /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 783EFCD0303D72D400456E2C /* KakaoSDKCommon */; };
+		783EFCD4303D73B700456E2C /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 783EFCD3303D73B700456E2C /* KakaoSDKUser */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		78F4A63E2FA4F981007CFBC1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -34,6 +42,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Secret.xcconfig,
 			);
 			target = 78F4A62C2FA4F97F007CFBC1 /* FinTarget */;
 		};
@@ -69,11 +78,22 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		783EFAD1303ACD2300456E2C /* Exceptions for "FinTarget" folder in "Compile Sources" phase from "FinTarget" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 78F4A6292FA4F97F007CFBC1 /* Sources */;
+			membershipExceptions = (
+				Secret.xcconfig,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		78F4A62F2FA4F97F007CFBC1 /* FinTarget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				78F4AB392FA859E9007CFBC1 /* Exceptions for "FinTarget" folder in "FinTarget" target */,
+				783EFAD1303ACD2300456E2C /* Exceptions for "FinTarget" folder in "Compile Sources" phase from "FinTarget" target */,
 				78F4AB632FA85DA6007CFBC1 /* Exceptions for "FinTarget" folder in "FinTargetTests" target */,
 				78F4AB642FA85DA6007CFBC1 /* Exceptions for "FinTarget" folder in "FinTargetUITests" target */,
 			);
@@ -97,6 +117,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				783EFAD6303ACE6400456E2C /* Moya in Frameworks */,
+				783EFAD4303ACE6400456E2C /* CombineMoya in Frameworks */,
+				783EFCD1303D72D400456E2C /* KakaoSDKCommon in Frameworks */,
+				783EFCD4303D73B700456E2C /* KakaoSDKUser in Frameworks */,
+				783EFCCF303D72D400456E2C /* KakaoSDKAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -117,12 +142,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		783EFCD2303D73B700456E2C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		78F4A6242FA4F97F007CFBC1 = {
 			isa = PBXGroup;
 			children = (
 				78F4A62F2FA4F97F007CFBC1 /* FinTarget */,
 				78F4A6402FA4F981007CFBC1 /* FinTargetTests */,
 				78F4A64A2FA4F981007CFBC1 /* FinTargetUITests */,
+				783EFCD2303D73B700456E2C /* Frameworks */,
 				78F4A62E2FA4F97F007CFBC1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -157,6 +190,11 @@
 			);
 			name = FinTarget;
 			packageProductDependencies = (
+				783EFAD3303ACE6400456E2C /* CombineMoya */,
+				783EFAD5303ACE6400456E2C /* Moya */,
+				783EFCCE303D72D400456E2C /* KakaoSDKAuth */,
+				783EFCD0303D72D400456E2C /* KakaoSDKCommon */,
+				783EFCD3303D73B700456E2C /* KakaoSDKUser */,
 			);
 			productName = FinTarget;
 			productReference = 78F4A62D2FA4F97F007CFBC1 /* FinTarget.app */;
@@ -240,6 +278,10 @@
 			);
 			mainGroup = 78F4A6242FA4F97F007CFBC1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				783EFAD2303ACE6400456E2C /* XCRemoteSwiftPackageReference "Moya" */,
+				783EFCCB303D72D400456E2C /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 78F4A62E2FA4F97F007CFBC1 /* Products */;
 			projectDirPath = "";
@@ -316,6 +358,8 @@
 /* Begin XCBuildConfiguration section */
 		78F4A64F2FA4F981007CFBC1 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 78F4A62F2FA4F97F007CFBC1 /* FinTarget */;
+			baseConfigurationReferenceRelativePath = Secret.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -379,6 +423,8 @@
 		};
 		78F4A6502FA4F981007CFBC1 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 78F4A62F2FA4F97F007CFBC1 /* FinTarget */;
+			baseConfigurationReferenceRelativePath = Secret.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -445,6 +491,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FinTarget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -475,6 +524,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FinTarget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -605,6 +657,53 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		783EFAD2303ACE6400456E2C /* XCRemoteSwiftPackageReference "Moya" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Moya/Moya";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 15.0.3;
+			};
+		};
+		783EFCCB303D72D400456E2C /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.28.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		783EFAD3303ACE6400456E2C /* CombineMoya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 783EFAD2303ACE6400456E2C /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = CombineMoya;
+		};
+		783EFAD5303ACE6400456E2C /* Moya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 783EFAD2303ACE6400456E2C /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = Moya;
+		};
+		783EFCCE303D72D400456E2C /* KakaoSDKAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 783EFCCB303D72D400456E2C /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKAuth;
+		};
+		783EFCD0303D72D400456E2C /* KakaoSDKCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 783EFCCB303D72D400456E2C /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKCommon;
+		};
+		783EFCD3303D73B700456E2C /* KakaoSDKUser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 783EFCCB303D72D400456E2C /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKUser;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 78F4A6252FA4F97F007CFBC1 /* Project object */;
 }

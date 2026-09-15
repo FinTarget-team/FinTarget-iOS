@@ -10,7 +10,6 @@ import Foundation
 enum NavigationDestination: Equatable, Hashable{
     
     case login
-
     case baseTab
     case home
     case simulation
