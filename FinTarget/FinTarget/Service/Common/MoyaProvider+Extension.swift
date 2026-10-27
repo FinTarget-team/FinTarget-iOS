@@ -11,8 +11,9 @@ import CombineMoya
 
 extension MoyaProvider {
 
-    // MARK: - 기존 API 응답 처리
-    /// 기존 isSuccess / code / message / result 형식의 API 응답 처리
+    // MARK: - 데이터가 있는 API 응답 처리
+    /// status / message / data 형식의 공f통 API 응답 처리
+    /// data가 존재하는 API에서 사용
     func requestResult<T: Decodable>(
         _ target: Target,
         type: T.Type
@@ -24,6 +25,7 @@ extension MoyaProvider {
                 let decoded: APIResponse<T>
 
                 do {
+                    /// 서버 응답을 APIResponse<T> 형태로 디코딩
                     decoded = try JSONDecoder().decode(
                         APIResponse<T>.self,
                         from: moyaResponse.data
@@ -34,38 +36,44 @@ extension MoyaProvider {
                         "RAW:",
                         String(data: moyaResponse.data, encoding: .utf8) ?? "nil"
                     )
+
                     throw APIError.decodingError
                 }
 
-                if decoded.isSuccess {
-                    if let result = decoded.result {
-                        return result
-                    } else {
-                        print("⚠️ isSuccess=true but result is nil")
-                        throw APIError.decodingError
-                    }
-                } else {
+                /// HTTP 상태 코드가 200번대가 아닌 경우 서버 에러 처리
+                guard (200..<300).contains(decoded.status) else {
                     throw APIError.serverError(
-                        code: decoded.code,
+                        code: String(decoded.status),
                         message: decoded.message
                     )
                 }
+
+                /// 성공했지만 data가 없는 경우
+                guard let data = decoded.data else {
+                    print("⚠️ API 요청 성공했지만 data가 nil입니다.")
+                    throw APIError.decodingError
+                }
+
+                return data
             }
             .mapError { error in
-                if let moya = error as? MoyaError {
-                    return .moyaError(moya)
-                } else if let api = error as? APIError {
-                    return api
-                } else {
-                    return .unknown
+
+                if let moyaError = error as? MoyaError {
+                    return .moyaError(moyaError)
                 }
+
+                if let apiError = error as? APIError {
+                    return apiError
+                }
+
+                return .unknown
             }
             .eraseToAnyPublisher()
     }
 
 
-    // MARK: - FinTarget API 응답 처리
-    /// status / message / data 형식의 서버 응답을 DTO 자체로 디코딩
+    // MARK: - 공통 응답 전체가 필요한 API 처리
+    /// status / message / data 전체 응답을 반환
     func requestResponse<T: Decodable>(
         _ target: Target,
         type: T.Type
@@ -74,14 +82,34 @@ extension MoyaProvider {
         return self.requestPublisher(target)
             .tryMap { moyaResponse -> T in
 
+                /// HTTP 상태 코드 확인
+                guard (200..<300).contains(moyaResponse.statusCode) else {
+
+                    switch moyaResponse.statusCode {
+
+                    case 401:
+                        throw APIError.unauthorized
+
+                    case 403:
+                        throw APIError.forbidden
+
+                    case 404:
+                        throw APIError.notFound
+
+                    default:
+                        throw APIError.serverError(
+                            code: String(moyaResponse.statusCode),
+                            message: "서버 요청에 실패했습니다."
+                        )
+                    }
+                }
+
                 do {
-                    let decoded = try JSONDecoder().decode(
+                    /// 서버 응답 전체 디코딩
+                    return try JSONDecoder().decode(
                         T.self,
                         from: moyaResponse.data
                     )
-
-                    return decoded
-
                 } catch {
                     print("❌ decode error:", error)
                     print(
@@ -93,31 +121,35 @@ extension MoyaProvider {
                 }
             }
             .mapError { error in
-                if let moya = error as? MoyaError {
-                    return .moyaError(moya)
-                } else if let api = error as? APIError {
-                    return api
-                } else {
-                    return .unknown
+
+                if let moyaError = error as? MoyaError {
+                    return .moyaError(moyaError)
                 }
+
+                if let apiError = error as? APIError {
+                    return apiError
+                }
+
+                return .unknown
             }
             .eraseToAnyPublisher()
     }
-
-
-    // MARK: - 상태 응답 처리
+    
+    // MARK: - 데이터가 없는 API 응답 처리
+    /// data가 null인 API에서 사용
     func requestStatus(
         _ target: Target
-    ) -> AnyPublisher<StatusResponseOnly, APIError> {
+    ) -> AnyPublisher<APIResponse<EmptyData>, APIError> {
 
         return self.requestPublisher(target)
-            .tryMap { moyaResponse -> StatusResponseOnly in
+            .tryMap { moyaResponse -> APIResponse<EmptyData> in
 
-                let decoded: StatusResponseOnly
+                let decoded: APIResponse<EmptyData>
 
                 do {
+                    /// data가 null인 공통 응답 디코딩
                     decoded = try JSONDecoder().decode(
-                        StatusResponseOnly.self,
+                        APIResponse<EmptyData>.self,
                         from: moyaResponse.data
                     )
                 } catch {
@@ -126,26 +158,31 @@ extension MoyaProvider {
                         "RAW:",
                         String(data: moyaResponse.data, encoding: .utf8) ?? "nil"
                     )
+
                     throw APIError.decodingError
                 }
 
-                if decoded.isSuccess {
-                    return decoded
-                } else {
+                /// 서버 응답 상태 코드 확인
+                guard (200..<300).contains(decoded.status) else {
                     throw APIError.serverError(
-                        code: decoded.code,
+                        code: String(decoded.status),
                         message: decoded.message
                     )
                 }
+
+                return decoded
             }
             .mapError { error in
-                if let moya = error as? MoyaError {
-                    return .moyaError(moya)
-                } else if let api = error as? APIError {
-                    return api
-                } else {
-                    return .unknown
+
+                if let moyaError = error as? MoyaError {
+                    return .moyaError(moyaError)
                 }
+
+                if let apiError = error as? APIError {
+                    return apiError
+                }
+
+                return .unknown
             }
             .eraseToAnyPublisher()
     }

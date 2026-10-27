@@ -8,23 +8,22 @@ import SwiftUI
 
 struct BaseTabView: View {
     
+    @EnvironmentObject private var sessionManager: SessionManager
     @State private var selectedTab: BaseTab = .home
     
     var body: some View {
-        ZStack {
-            
-            // MARK: - 현재 화면
-            switch selectedTab {
-            case .home:
-                HomeView()
-            case .simulation:
-                SimulationView()
-            case .policy:
-                PolicyView()
-            case .my:
-                MyPageView()
+            ZStack {
+                // MARK: - 현재 화면
+                switch selectedTab {
+                case .home:
+                    HomeView(selectedTab: $selectedTab)
+                case .simulation:
+                    SimulationView()
+                case .policy:
+                    PolicyView()
+                case .my:
+                    MyPageView(sessionManager: sessionManager)
             }
-            
             // MARK: - Liquid Glass TabBar
             VStack {
                 Spacer()

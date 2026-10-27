@@ -34,7 +34,7 @@ extension AuthRouter: APITargetType {
         case .kakaoLogin:
             return "/auth/kakao/login/token"
         case .naverLogin:
-            return "/auth/naver/login"
+            return "/auth/naver/login/token"
         case .appleLogin:
             return "/auth/apple/login"
             

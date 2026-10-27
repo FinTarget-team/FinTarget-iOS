@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		780633A4307A1ABD001038FA /* NidThirdPartyLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 780633A3307A1ABD001038FA /* NidThirdPartyLogin */; };
 		783EFAD4303ACE6400456E2C /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = 783EFAD3303ACE6400456E2C /* CombineMoya */; };
 		783EFAD6303ACE6400456E2C /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = 783EFAD5303ACE6400456E2C /* Moya */; };
 		783EFCCF303D72D400456E2C /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 783EFCCE303D72D400456E2C /* KakaoSDKAuth */; };
@@ -122,6 +123,7 @@
 				783EFCD1303D72D400456E2C /* KakaoSDKCommon in Frameworks */,
 				783EFCD4303D73B700456E2C /* KakaoSDKUser in Frameworks */,
 				783EFCCF303D72D400456E2C /* KakaoSDKAuth in Frameworks */,
+				780633A4307A1ABD001038FA /* NidThirdPartyLogin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,6 +197,7 @@
 				783EFCCE303D72D400456E2C /* KakaoSDKAuth */,
 				783EFCD0303D72D400456E2C /* KakaoSDKCommon */,
 				783EFCD3303D73B700456E2C /* KakaoSDKUser */,
+				780633A3307A1ABD001038FA /* NidThirdPartyLogin */,
 			);
 			productName = FinTarget;
 			productReference = 78F4A62D2FA4F97F007CFBC1 /* FinTarget.app */;
@@ -281,6 +284,7 @@
 			packageReferences = (
 				783EFAD2303ACE6400456E2C /* XCRemoteSwiftPackageReference "Moya" */,
 				783EFCCB303D72D400456E2C /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+				780633A2307A1ABD001038FA /* XCRemoteSwiftPackageReference "naveridlogin-sdk-ios-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 78F4A62E2FA4F97F007CFBC1 /* Products */;
@@ -659,6 +663,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		780633A2307A1ABD001038FA /* XCRemoteSwiftPackageReference "naveridlogin-sdk-ios-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/naver/naveridlogin-sdk-ios-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.1;
+			};
+		};
 		783EFAD2303ACE6400456E2C /* XCRemoteSwiftPackageReference "Moya" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Moya/Moya";
@@ -678,6 +690,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		780633A3307A1ABD001038FA /* NidThirdPartyLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 780633A2307A1ABD001038FA /* XCRemoteSwiftPackageReference "naveridlogin-sdk-ios-swift" */;
+			productName = NidThirdPartyLogin;
+		};
 		783EFAD3303ACE6400456E2C /* CombineMoya */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 783EFAD2303ACE6400456E2C /* XCRemoteSwiftPackageReference "Moya" */;

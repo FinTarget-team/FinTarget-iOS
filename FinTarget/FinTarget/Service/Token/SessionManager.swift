@@ -58,20 +58,44 @@ final class SessionManager: ObservableObject {
         self.authService = authService
     }
 
+    /*
     // MARK: - 앱 시작 시 진입점
-
     /// 앱 실행 시 저장된 토큰으로 자동 로그인 가능 여부 확인
     func bootstrap() {
         guard let token = keychain.loadToken() else {
             flow = .loggedOut
             return
         }
-
         refreshAccessToken(token: token)
     }
+    */
+    
+    /*
+    //임시(나머지 API테스트할 때 임시사용)
+    func bootstrap() {
+        print("🚀 bootstrap 실행")
 
+        guard let token = keychain.loadToken() else {
+            print("❌ 저장된 토큰 없음 → 로그인")
+            flow = .loggedOut
+            return
+        }
+
+        print("🔑 저장된 토큰 있음 → 자동 로그인")
+        refreshAccessToken(token: token)
+    }
+     
+
+    */
+    
+    // 온보딩 API 테스트용 임시 bootstrap 코드
+    func bootstrap(){
+        logout()
+    }
+    
+    
+    
     // MARK: - Access Token 재발급
-
     /// 저장되어 있는 Refresh Token으로 새로운 Access Token을 발급
     private func refreshAccessToken(token: TokenInfo) {
 
@@ -117,22 +141,30 @@ final class SessionManager: ObservableObject {
                             refreshToken: token.refreshToken
                         )
                     )
-
+                    
+                    
                     // 이미 로그인한 사용자는 온보딩 완료 여부에 따라 화면 결정
                     let onboardingCompleted = self.defaults.bool(
                         forKey: "onboardingCompleted"
                     )
 
                     self.flow = onboardingCompleted
-                        ? .home
+                        ? .main
                         : .welcome
+                     
+                    
+                    
+                    // 온보딩 API 테스트를 위해 임시로 Welcome 화면으로 이동
+                    // self.defaults.set(false, forKey: "onboardingCompleted")
+                    // self.flow = .welcome
+                     
                 }
             )
             .store(in: &cancellables)
     }
 
+    
     // MARK: - 소셜 로그인 성공
-
     /// 카카오/네이버/애플 로그인 성공 결과를 세션에 반영
     func applySocialLoginResult(_ response: SocialLoginResponseDTO) {
         let data = response.data
@@ -153,27 +185,42 @@ final class SessionManager: ObservableObject {
             // 기존 회원
             // 이미 최초 온보딩 및 목표 설정을 완료한 사용자
             defaults.set(true, forKey: "onboardingCompleted")
-            flow = .home
+            flow = .main
         }
     }
+    
+
+    /*
+    /// 카카오/네이버/애플 로그인 성공 결과를 세션에 반영(온보딩API 테스트 시 임시 사용하면 됨)
+    func applySocialLoginResult(_ response: SocialLoginResponseDTO) {
+        let data = response.data
+
+        applySession(
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+            userId: data.userId
+        )
+
+        // 온보딩 테스트를 위해 임시로 Welcome 화면으로 이동
+        defaults.set(false, forKey: "onboardingCompleted")
+        flow = .welcome
+    }
+    */
 
     // MARK: - Welcome 완료
-
     /// WelcomeView에서 "시작하기" 버튼을 눌렀을 때 호출
     func completeWelcome() {
         flow = .onboarding
     }
 
     // MARK: - 온보딩 완료
-
     /// 온보딩에서 금융 목표 설정까지 성공적으로 완료했을 때 호출
     func completeOnboarding() {
         defaults.set(true, forKey: "onboardingCompleted")
-        flow = .home
+        flow = .main
     }
 
     // MARK: - 로그아웃
-
     /// 저장된 모든 세션 정보를 초기화하고 로그인 화면으로 이동
     func logout() {
         _ = keychain.deleteToken()

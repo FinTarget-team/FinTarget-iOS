@@ -25,9 +25,9 @@ struct RootView: View {
             WelcomeView()
 
         case .onboarding:
-            OnboardingView()
+            OnboardingView(sessionManager: sessionManager)
 
-        case .home:
+        case .main:
             BaseTabView()
         }
     }
