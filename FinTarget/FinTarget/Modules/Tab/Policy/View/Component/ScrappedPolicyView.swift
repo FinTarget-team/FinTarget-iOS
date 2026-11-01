@@ -8,9 +8,13 @@ import SwiftUI
 struct ScrappedPolicyView: View {
     
     @ObservedObject var viewModel: PolicyViewModel
+    @State private var selectedPolicy: PolicyDTO?
+    @State private var showPolicyDetail = false
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+            
+            // MARK: - 로딩
             
             if viewModel.isLoading {
                 Spacer()
@@ -19,6 +23,35 @@ struct ScrappedPolicyView: View {
                 
                 Spacer()
                 
+            // MARK: - 에러
+            
+            } else if let errorMessage = viewModel.errorMessage {
+                Spacer()
+                
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.system(size: 40))
+                        .foregroundColor(.gray)
+                    
+                    Text("스크랩한 정책을 불러오지 못했어요")
+                        .font(.PretendardBold(size: 18))
+                    
+                    Text(errorMessage)
+                        .font(.PretendardMedium(size: 14))
+                        .foregroundColor(.gray)
+                    
+                    Button {
+                        loadPolicies()
+                    } label: {
+                        Text("다시 시도")
+                            .font(.PretendardBold(size: 14))
+                    }
+                }
+                
+                Spacer()
+                
+            // MARK: - 빈 목록
+            
             } else if viewModel.myPolicies.isEmpty {
                 Spacer()
                 
@@ -37,13 +70,34 @@ struct ScrappedPolicyView: View {
                 
                 Spacer()
                 
+            // MARK: - 스크랩 정책 목록
+            
             } else {
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 16) {
                         
-                        ForEach(viewModel.myPolicies, id: \.userPolicyId) { userPolicy in
-                            
-                            Text(userPolicy.policy.name)
+                        Text("스크랩한 정책 \(viewModel.myPolicies.count)개")
+                            .font(.PretendardMedium(size: 15))
+                            .foregroundColor(.gray)
+                        
+                        ForEach(
+                            viewModel.myPolicies,
+                            id: \.userPolicyId
+                        ) { userPolicy in
+
+                            MatchingPolicyCardView(
+                                policy: userPolicy.policy,
+                                isScrapped: true,
+                                onScrapTapped: {
+                                    deleteScrap(
+                                        userPolicyId: userPolicy.userPolicyId
+                                    )
+                                },
+                                onDetailTapped: {
+                                    selectedPolicy = userPolicy.policy
+                                    showPolicyDetail = true
+                                }
+                            )
                         }
                     }
                     .padding(.horizontal, 20)
@@ -54,7 +108,21 @@ struct ScrappedPolicyView: View {
         .navigationTitle("스크랩한 정책")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            viewModel.getMyPolicies()
+            loadPolicies()
         }
+    }
+    
+    
+    // MARK: - 스크랩 정책 목록 조회
+    private func loadPolicies() {
+        viewModel.getMyPolicies()
+    }
+    
+    
+    // MARK: - 스크랩 정책 삭제
+    private func deleteScrap(userPolicyId: String) {
+        viewModel.deleteUserPolicy(
+            userPolicyId: userPolicyId
+        )
     }
 }

@@ -163,7 +163,7 @@ final class SessionManager: ObservableObject {
             .store(in: &cancellables)
     }
 
-    
+    /*
     // MARK: - 소셜 로그인 성공
     /// 카카오/네이버/애플 로그인 성공 결과를 세션에 반영
     func applySocialLoginResult(_ response: SocialLoginResponseDTO) {
@@ -188,9 +188,9 @@ final class SessionManager: ObservableObject {
             flow = .main
         }
     }
-    
+    */
 
-    /*
+    
     /// 카카오/네이버/애플 로그인 성공 결과를 세션에 반영(온보딩API 테스트 시 임시 사용하면 됨)
     func applySocialLoginResult(_ response: SocialLoginResponseDTO) {
         let data = response.data
@@ -205,7 +205,7 @@ final class SessionManager: ObservableObject {
         defaults.set(false, forKey: "onboardingCompleted")
         flow = .welcome
     }
-    */
+
 
     // MARK: - Welcome 완료
     /// WelcomeView에서 "시작하기" 버튼을 눌렀을 때 호출

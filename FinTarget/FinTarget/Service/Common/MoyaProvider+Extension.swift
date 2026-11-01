@@ -111,11 +111,48 @@ extension MoyaProvider {
                         from: moyaResponse.data
                     )
                 } catch {
-                    print("❌ decode error:", error)
-                    print(
-                        "RAW:",
-                        String(data: moyaResponse.data, encoding: .utf8) ?? "nil"
-                    )
+
+                    print("========== 디코딩 오류 ==========")
+                    print("요청 API: \(target)")
+                    print("DTO: \(T.self)")
+                    print("오류: \(error)")
+
+                    if let decodingError = error as? DecodingError {
+
+                        let context: DecodingError.Context
+
+                        switch decodingError {
+
+                        case .keyNotFound(_, let errorContext):
+                            context = errorContext
+
+                        case .typeMismatch(_, let errorContext):
+                            context = errorContext
+
+                        case .valueNotFound(_, let errorContext):
+                            context = errorContext
+
+                        case .dataCorrupted(let errorContext):
+                            context = errorContext
+
+                        @unknown default:
+                            throw APIError.decodingError
+                        }
+
+                        let path = context.codingPath
+                            .map { key in
+                                if let index = key.intValue {
+                                    return "[\(index)]"
+                                }
+                                return key.stringValue
+                            }
+                            .joined(separator: " → ")
+
+                        print("❌ 오류 발생 위치: \(path)")
+                        print("❌ 상세 원인: \(context.debugDescription)")
+                    }
+
+                    print("================================")
 
                     throw APIError.decodingError
                 }

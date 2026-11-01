@@ -7,9 +7,20 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    
+
+    // MARK: - Properties
+
     @StateObject private var viewModel: OnboardingViewModel
-    
+    @State private var selectedBirthYear: Int = 2000
+
+    private let primaryColor = Color(
+        red: 0.20,
+        green: 0.39,
+        blue: 0.91
+    )
+
+    // MARK: - Init
+
     init(sessionManager: SessionManager) {
         _viewModel = StateObject(
             wrappedValue: OnboardingViewModel(
@@ -17,163 +28,109 @@ struct OnboardingView: View {
             )
         )
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
+        VStack(spacing: 0) {
+
+            // MARK: - Header
+
+            if !viewModel.isCompleted {
+                OnboardingProgressHeader(
+                    currentStep: viewModel.stepData?.step ?? 1,
+                    totalSteps: viewModel.stepData?.totalSteps ?? 7,
+                    backAction: {
+                        // 이전 단계 이동 기능 추후 구현
+                    }
+                )
+            }
+
+            // MARK: - Conversation
+
+            conversationView
+
+            // MARK: - Bottom Input Area
+
+            if !viewModel.isCompleted {
+                bottomInputView
+            }
+        }
+        .background(Color(.systemGray6))
+        .onChange(of: viewModel.selectedOption) { _, newValue in
+            guard newValue != nil,
+                  !viewModel.isLoading,
+                  viewModel.stepData?.answerType == "CHIP" else {
+                return
+            }
+
+            viewModel.submitAnswer()
+        }
+        .task {
+            if viewModel.stepData == nil && !viewModel.isCompleted {
+                viewModel.fetchStep()
+            }
+        }
+    }
+
+    // MARK: - Conversation View
+
+    private var conversationView: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                VStack(alignment: .leading, spacing: 40) {
-                    
-                    // MARK: - Header
-                    
-                    VStack(spacing: 20) {
-                        HStack {
-                            Button("← 뒤로") {}
-                            
-                            Spacer()
-                            
-                            Text("프로필 설정")
-                                .font(.headline)
-                            
-                            Spacer()
-                        }
-                        
-                        ProgressView(value: viewModel.stepData?.progress ?? 0)
-                            .tint(.cyan)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top)
-                    
+                VStack(alignment: .leading, spacing: 24) {
+
                     // MARK: - Previous Answers
-                    
+
                     ForEach(viewModel.answeredQuestions) { item in
-                        OnboardingQuestionTitle(
-                            title: item.question
-                        )
-                        
-                        OnboardingAnswerBubble(
-                            text: item.answer
-                        )
+                        VStack(spacing: 16) {
+                            OnboardingQuestionTitle(
+                                title: item.question
+                            )
+
+                            OnboardingAnswerBubble(
+                                text: item.answer
+                            )
+                        }
                     }
-                    
+
                     // MARK: - Current Question
-                    
+
                     if !viewModel.isCompleted,
                        let stepData = viewModel.stepData {
-                        
-                        Group {
-                            if stepData.answerType == "CHIP" {
-                                
-                                // MARK: CHIP 타입
-                                
-                                OnboardingQuestionSection(
-                                    title: stepData.question,
-                                    items: stepData.options,
-                                    selectedItem: $viewModel.selectedOption
-                                )
-                                .onChange(of: viewModel.selectedOption) { _, newValue in
-                                    guard newValue != nil else { return }
-                                    viewModel.submitAnswer()
-                                }
-                                
-                            } else if stepData.answerType == "NUMBER" {
-                                
-                                // MARK: NUMBER 타입
-                                
-                                VStack(alignment: .leading, spacing: 20) {
-                                    OnboardingQuestionTitle(
-                                        title: stepData.question
-                                    )
-                                    
-                                    HStack(spacing: 12) {
-                                        TextField(
-                                            "목표 금액을 입력해주세요",
-                                            text: $viewModel.numberInput
-                                        )
-                                        .keyboardType(.numberPad)
-                                        .font(.body)
-                                        .padding(.horizontal, 20)
-                                        .frame(height: 56)
-                                        .background(.white)
-                                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                                        
-                                        Text("원")
-                                            .font(.body)
-                                            .fontWeight(.semibold)
-                                    }
-                                    
-                                    if !viewModel.numberInput.isEmpty {
-                                        OnboardingButtonSection {
-                                            viewModel.submitAnswer()
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, 24)
-                            }
-                        }
-                        .id("currentQuestion")
+
+                        currentQuestionView(stepData: stepData)
+                            .id("currentQuestion")
                     }
-                    
-                    // MARK: - Loading
-                    
-                    if viewModel.isLoading {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                            Spacer()
+
+                    // MARK: - Error Message
+
+                    if let errorMessage = viewModel.errorMessage {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.circle.fill")
+
+                            Text(errorMessage)
+                                .font(.system(size: 14))
                         }
-                    }
-                    
-                    // MARK: - Complete
-                    if viewModel.isCompleted {
-                        VStack(spacing: 24) {
-                            Circle()
-                                .stroke(Color.cyan, lineWidth: 2)
-                                .frame(width: 90, height: 90)
-                                .overlay {
-                                    Image(systemName: "checkmark")
-                                        .font(.title)
-                                        .foregroundStyle(.cyan)
-                                }
-                            
-                            VStack(spacing: 8) {
-                                Text("분석 완료!")
-                                    .font(.title2.bold())
-                                
-                                Text("입력하신 정보를 바탕으로\n맞춤 정책과 자산 시뮬레이션을 준비했어요.")
-                                    .multilineTextAlignment(.center)
-                                    .foregroundStyle(.gray)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                ForEach(viewModel.answeredQuestions) { item in
-                                    OnboardingSummaryRow(
-                                        title: item.question,
-                                        value: item.answer
-                                    )
-                                }
-                            }
-                            .padding()
-                            .background(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 20))
-                            
-                            Button {
-                                viewModel.moveToHome()
-                            } label: {
-                                Text("내 플랜 보러가기")
-                                    .foregroundStyle(.white)
-                                    .fontWeight(.bold)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 56)
-                                    .background(Color.cyan)
-                                    .clipShape(Capsule())
-                            }
-                        }
+                        .foregroundStyle(.red)
                         .padding(.horizontal, 24)
                     }
+
+                    // MARK: - Loading
+
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    }
+
+                    // MARK: - Complete
+
+                    if viewModel.isCompleted {
+                        completedView
+                    }
                 }
-                .padding(.bottom, 40)
+                .padding(.vertical, 30)
             }
-            .background(Color(.systemGray6))
             .onChange(of: viewModel.stepData?.step) { _, _ in
                 DispatchQueue.main.async {
                     withAnimation(.easeInOut(duration: 0.4)) {
@@ -184,9 +141,194 @@ struct OnboardingView: View {
                     }
                 }
             }
-            .task {
-                viewModel.fetchStep()
+        }
+    }
+
+    // MARK: - Current Question View
+
+    @ViewBuilder
+    private func currentQuestionView(
+        stepData: OnboardingStepDataDTO
+    ) -> some View {
+
+        VStack(alignment: .leading, spacing: 24) {
+
+            // MARK: - Question Bubble
+
+            OnboardingQuestionTitle(
+                title: stepData.question
+            )
+
+            // MARK: - CHIP Input
+
+            if stepData.answerType == "CHIP" {
+
+                if stepData.step == 5 {
+
+                    // 거주 지역 선택
+
+                    OnboardingRegionSelectionView(
+                        items: stepData.options,
+                        selectedItem: $viewModel.selectedOption
+                    )
+
+                } else {
+
+                    // 직업 / 소득 / 주택 보유 여부 선택
+
+                    OnboardingWrapButtonView(
+                        items: stepData.options,
+                        selectedItem: $viewModel.selectedOption
+                    )
+                    .padding(20)
+                    .background(.white)
+                    .clipShape(
+                        RoundedRectangle(cornerRadius: 24)
+                    )
+                    .padding(.horizontal, 24)
+                }
+
+            // MARK: - TEXT Input
+
+            } else if stepData.answerType == "TEXT" {
+
+                OnboardingTextInputView(
+                    text: $viewModel.textInput
+                )
+
+            // MARK: - NUMBER Input
+
+            } else if stepData.answerType == "NUMBER" {
+
+                if stepData.step == 7 {
+
+                    OnboardingAmountInputView(
+                        amount: $viewModel.numberInput
+                    )
+                }
             }
         }
+    }
+
+    // MARK: - Bottom Input View
+
+    @ViewBuilder
+    private var bottomInputView: some View {
+
+        if let stepData = viewModel.stepData {
+
+            // MARK: - Birth Year Picker
+
+            if stepData.answerType == "NUMBER",
+               stepData.step == 2 {
+
+                VStack(spacing: 0) {
+
+                    OnboardingBirthYearPicker(
+                        selectedYear: $selectedBirthYear
+                    )
+
+                    OnboardingButtonSection(
+                        action: {
+                            viewModel.numberInput = String(selectedBirthYear)
+                            viewModel.submitAnswer()
+                        },
+                        isEnabled: !viewModel.isLoading
+                    )
+                    .padding(.bottom, 24)
+                    .background(.white)
+                }
+
+            // MARK: - Name Input Button
+
+            } else if stepData.answerType == "TEXT" {
+
+                OnboardingButtonSection(
+                    action: {
+                        viewModel.submitAnswer()
+                    },
+                    isEnabled: !viewModel.textInput
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .isEmpty && !viewModel.isLoading
+                )
+                .padding(.vertical, 16)
+
+            // MARK: - Goal Amount Button
+
+            } else if stepData.answerType == "NUMBER",
+                      stepData.step == 7 {
+
+                OnboardingButtonSection(
+                    action: {
+                        viewModel.submitAnswer()
+                    },
+                    isEnabled: !viewModel.numberInput.isEmpty
+                        && !viewModel.isLoading
+                )
+                .padding(.vertical, 16)
+            }
+        }
+    }
+
+    // MARK: - Completed View
+
+    private var completedView: some View {
+        VStack(spacing: 24) {
+
+            // MARK: - Complete Icon
+
+            Circle()
+                .stroke(primaryColor, lineWidth: 2)
+                .frame(width: 90, height: 90)
+                .overlay {
+                    Image(systemName: "checkmark")
+                        .font(.title)
+                        .foregroundStyle(primaryColor)
+                }
+
+            // MARK: - Complete Message
+
+            VStack(spacing: 8) {
+                Text("분석 완료!")
+                    .font(.title2.bold())
+
+                Text("입력하신 정보를 바탕으로\n맞춤 정책과 자산 시뮬레이션을 준비했어요.")
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.gray)
+            }
+
+            // MARK: - Answer Summary
+
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(viewModel.answeredQuestions) { item in
+                    OnboardingSummaryRow(
+                        title: item.question,
+                        value: item.answer
+                    )
+                }
+            }
+            .padding()
+            .background(.white)
+            .clipShape(
+                RoundedRectangle(cornerRadius: 20)
+            )
+
+            // MARK: - Move To Home
+
+            Button {
+                viewModel.moveToHome()
+            } label: {
+                Text("내 플랜 보러가기")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 60)
+                    .background(primaryColor)
+                    .clipShape(
+                        RoundedRectangle(cornerRadius: 18)
+                    )
+            }
+        }
+        .padding(.horizontal, 24)
     }
 }

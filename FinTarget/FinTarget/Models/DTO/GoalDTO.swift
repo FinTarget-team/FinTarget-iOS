@@ -70,9 +70,24 @@ struct GoalDataDTO: Decodable {
     let targetAmount: Int /// 목표 금액
     let currentAmount: Int /// 현재 보유 금액
     let deadline: String /// 목표 달성 기한
+    let deadlineDefaulted: Bool /// 목표 기한 기본값 설정 여부
     let status: String /// 목표 상태
     let createdAt: String /// 목표 생성 시간
     let updatedAt: String /// 목표 수정 시간
-    let progressRate: Int /// 목표 진행률
+    let progressRate: Double /// 목표 진행률
     let dDay: Int /// 목표일까지 남은 일수
+
+    enum CodingKeys: String, CodingKey {
+        case goalId
+        case title
+        case targetAmount
+        case currentAmount
+        case deadline
+        case deadlineDefaulted
+        case status
+        case createdAt
+        case updatedAt
+        case progressRate
+        case dDay = "dday"
+    }
 }

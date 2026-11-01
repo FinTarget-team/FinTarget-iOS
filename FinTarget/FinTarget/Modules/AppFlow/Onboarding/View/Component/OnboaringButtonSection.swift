@@ -7,27 +7,29 @@
 import SwiftUI
 
 struct OnboardingButtonSection: View {
-    
+
     let action: () -> Void
-    
+    var isEnabled: Bool = true
+
+    // MARK: - Body
+
     var body: some View {
-        
-        HStack {
-            Spacer()
-            
-            Button {
-                action()
-            } label: {
-                Circle()
-                    .fill(Color.cyan.opacity(0.15))
-                    .frame(width: 56, height: 56)
-                    .overlay {
-                        Image(systemName: "paperplane")
-                            .foregroundStyle(.cyan)
-                    }
-            }
+        Button {
+            action()
+        } label: {
+            Text("다음")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 60)
+                .background(
+                    isEnabled
+                    ? Color(red: 0.20, green: 0.39, blue: 0.91)
+                    : Color.gray.opacity(0.4)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 18))
         }
+        .disabled(!isEnabled)
         .padding(.horizontal, 24)
     }
 }
-

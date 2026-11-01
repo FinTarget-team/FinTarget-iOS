@@ -7,16 +7,15 @@
 import Foundation
 
 // MARK: - 정책
-
 /// 정책 정보 DTO
 struct PolicyDTO: Decodable {
     let policyId: String /// 정책 ID
     let name: String /// 정책명
-    let description: String /// 정책 설명
-    let minAge: Int /// 최소 지원 나이
-    let maxAge: Int /// 최대 지원 나이
-    let incomeLimit: Int /// 소득 기준
-    let benefitAmount: Int /// 지원 금액
+    let description: String? /// 정책 설명
+    let minAge: Int? /// 최소 지원 나이
+    let maxAge: Int? /// 최대 지원 나이
+    let incomeLimit: Int? /// 소득 기준
+    let benefitAmount: Int? /// 지원 금액
     let policyType: String /// 정책 유형
 }
 
@@ -53,7 +52,6 @@ struct CreateUserPolicyResponseDTO: Decodable {
 
 
 // MARK: - 나에게 맞는 정책 목록 조회
-
 /// 맞춤 정책 목록 조회 응답 DTO
 struct GetMatchingPoliciesResponseDTO: Decodable {
     let status: Int /// 응답 상태 코드
@@ -63,7 +61,6 @@ struct GetMatchingPoliciesResponseDTO: Decodable {
 
 
 // MARK: - 정책 스크랩 삭제
-
 /// 정책 스크랩 삭제 응답 DTO
 struct DeleteUserPolicyResponseDTO: Decodable {
     let status: Int /// 응답 상태 코드

@@ -71,12 +71,11 @@ final class SimulationViewModel: ObservableObject {
     
     
     // MARK: - 목표 달성 시뮬레이션 실행
-    
     func runSimulation(
         goalId: String,
         monthlySaving: Int,
-        userPolicyId: String?,
-        annualInterestRate: Double
+        userPolicyId: String? = nil,
+        annualInterestRate: Double = 0.03
     ) {
         isLoading = true
         errorMessage = nil

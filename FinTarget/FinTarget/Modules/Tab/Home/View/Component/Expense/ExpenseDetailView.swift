@@ -7,31 +7,39 @@
 import SwiftUI
 
 struct ExpenseDetailView: View {
-    
+
     @ObservedObject var viewModel: HomeViewModel
-    
+
     @State private var selectedPeriod: ExpensePeriod = .thisMonth
     @State private var startDate: Date = Date()
     @State private var endDate: Date = Date()
-    
+
+    // MARK: - 지출 추가 상태
+
+    @State private var showAddExpense = false
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 24) {
-                
+
                 // MARK: - 기간 선택
-                
+
                 periodSection
-                
+
+                // MARK: - 지출 내역 추가
+
+                addExpenseSection
+
                 // MARK: - 총 지출
-                
+
                 totalExpenseCard
-                
+
                 // MARK: - 카테고리별 지출
-                
+
                 categorySection
-                
+
                 // MARK: - 지출 내역
-                
+
                 expenseListSection
             }
             .padding(20)
@@ -42,45 +50,54 @@ struct ExpenseDetailView: View {
         .onAppear {
             fetchThisMonth()
         }
+        .sheet(isPresented: $showAddExpense) {
+
+            AddExpenseView(
+                viewModel: viewModel,
+                onSuccess: {
+                    refreshExpenses()
+                }
+            )
+        }
     }
-    
+
     // MARK: - 기간 선택
-    
+
     private var periodSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            
+
             Text("조회 기간")
                 .font(.system(size: 18, weight: .bold))
-            
+
             HStack(spacing: 8) {
                 periodButton(.thisMonth)
                 periodButton(.lastMonth)
                 periodButton(.custom)
             }
-            
+
             if selectedPeriod == .custom {
                 customDateSection
             }
         }
     }
-    
+
     // MARK: - 기간 버튼
-    
+
     private func periodButton(_ period: ExpensePeriod) -> some View {
         Button {
             selectedPeriod = period
-            
+
             switch period {
             case .thisMonth:
                 fetchThisMonth()
-                
+
             case .lastMonth:
                 fetchLastMonth()
-                
+
             case .custom:
                 break
             }
-            
+
         } label: {
             Text(period.title)
                 .font(.system(size: 14, weight: .semibold))
@@ -97,32 +114,37 @@ struct ExpenseDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
-    
+
     // MARK: - 직접 기간 선택
-    
+
     private var customDateSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            
+
             HStack {
                 Text("시작일")
                     .font(.system(size: 14, weight: .medium))
-                
+
                 Spacer()
-                
+
                 DatePicker(
                     "",
                     selection: $startDate,
                     displayedComponents: .date
                 )
                 .labelsHidden()
+                .onChange(of: startDate) { _, newValue in
+                    if endDate < newValue {
+                        endDate = newValue
+                    }
+                }
             }
-            
+
             HStack {
                 Text("종료일")
                     .font(.system(size: 14, weight: .medium))
-                
+
                 Spacer()
-                
+
                 DatePicker(
                     "",
                     selection: $endDate,
@@ -131,7 +153,7 @@ struct ExpenseDetailView: View {
                 )
                 .labelsHidden()
             }
-            
+
             Button {
                 fetchCustomPeriod()
             } label: {
@@ -148,19 +170,47 @@ struct ExpenseDetailView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
-    
+
+    // MARK: - 지출 내역 추가 버튼
+
+    private var addExpenseSection: some View {
+
+        Button {
+            showAddExpense = true
+        } label: {
+
+            HStack(spacing: 10) {
+
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+
+                Text("지출 내역 추가")
+                    .font(.PretendardBold(size: 15))
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundColor(.white)
+            .padding(16)
+            .background(Color.blue)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
     // MARK: - 총 지출
-    
+
     private var totalExpenseCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            
+
             Text(periodTitle)
                 .font(.system(size: 14))
                 .foregroundColor(.gray)
-            
+
             Text("총 지출")
                 .font(.system(size: 16, weight: .semibold))
-            
+
             Text(formatAmount(viewModel.expenseStats?.totalAmount ?? 0))
                 .font(.system(size: 28, weight: .bold))
         }
@@ -169,18 +219,18 @@ struct ExpenseDetailView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
-    
+
     // MARK: - 카테고리별 지출
-    
+
     private var categorySection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            
+
             Text("카테고리별 지출")
                 .font(.system(size: 18, weight: .bold))
-            
+
             if let categories = viewModel.expenseStats?.byCategory,
                !categories.isEmpty {
-                
+
                 VStack(spacing: 16) {
                     ForEach(categories) { category in
                         categoryRow(category)
@@ -189,7 +239,7 @@ struct ExpenseDetailView: View {
                 .padding(18)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                
+
             } else {
                 emptyCard(
                     icon: "chart.pie",
@@ -198,30 +248,49 @@ struct ExpenseDetailView: View {
             }
         }
     }
-    
+
     // MARK: - 카테고리 Row
-    
+
     private func categoryRow(_ category: ExpenseCategoryDTO) -> some View {
         HStack(spacing: 12) {
-            
+
             Text(category.category)
                 .font(.system(size: 15))
-            
+
             Spacer()
-            
+
             Text(formatAmount(category.amount))
                 .font(.system(size: 15, weight: .semibold))
         }
     }
-    
+
     // MARK: - 지출 내역
-    
+
     private var expenseListSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            
-            Text("지출 내역")
-                .font(.system(size: 18, weight: .bold))
-            
+
+            HStack {
+
+                Text("지출 내역")
+                    .font(.system(size: 18, weight: .bold))
+
+                Spacer()
+
+                Button {
+                    showAddExpense = true
+                } label: {
+
+                    HStack(spacing: 4) {
+
+                        Image(systemName: "plus")
+
+                        Text("지출 추가")
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.blue)
+                }
+            }
+
             if viewModel.expenses.isEmpty {
                 emptyCard(
                     icon: "list.bullet.rectangle",
@@ -231,7 +300,7 @@ struct ExpenseDetailView: View {
                 VStack(spacing: 0) {
                     ForEach(viewModel.expenses) { expense in
                         expenseRow(expense)
-                        
+
                         if expense.id != viewModel.expenses.last?.id {
                             Divider()
                         }
@@ -243,44 +312,44 @@ struct ExpenseDetailView: View {
             }
         }
     }
-    
+
     // MARK: - 지출 Row
-    
+
     private func expenseRow(_ expense: ExpenseDTO) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 6) {
-                
+
                 Text(expense.description)
                     .font(.system(size: 15, weight: .semibold))
-                
+
                 HStack(spacing: 6) {
                     Text(expense.category)
-                    
+
                     Text("·")
-                    
+
                     Text(expense.spentAt)
                 }
                 .font(.system(size: 12))
                 .foregroundColor(.gray)
             }
-            
+
             Spacer()
-            
+
             Text("-\(formatAmount(expense.amount))")
                 .font(.system(size: 15, weight: .semibold))
         }
         .padding(.vertical, 14)
     }
-    
+
     // MARK: - Empty Card
-    
+
     private func emptyCard(icon: String, message: String) -> some View {
         VStack(spacing: 12) {
-            
+
             Image(systemName: icon)
                 .font(.system(size: 28))
                 .foregroundColor(.gray)
-            
+
             Text(message)
                 .font(.system(size: 14))
                 .foregroundColor(.gray)
@@ -290,23 +359,23 @@ struct ExpenseDetailView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
-    
+
     // MARK: - 이번 달 지출 조회
-    
+
     private func fetchThisMonth() {
         let range = monthRange(from: Date())
-        
+
         fetchExpenses(
             start: range.start,
             end: range.end
         )
     }
-    
+
     // MARK: - 지난 달 지출 조회
-    
+
     private func fetchLastMonth() {
         let calendar = Calendar.current
-        
+
         guard let lastMonth = calendar.date(
             byAdding: .month,
             value: -1,
@@ -314,112 +383,130 @@ struct ExpenseDetailView: View {
         ) else {
             return
         }
-        
+
         let range = monthRange(from: lastMonth)
-        
+
         fetchExpenses(
             start: range.start,
             end: range.end
         )
     }
-    
+
     // MARK: - 직접 선택한 기간 지출 조회
-    
+
     private func fetchCustomPeriod() {
         let start = formatDate(startDate)
         let end = formatDate(endDate)
-        
+
         fetchExpenses(
             start: start,
             end: end
         )
     }
-    
+
     // MARK: - 기간별 지출 조회
-    
+
     private func fetchExpenses(start: String, end: String) {
+
         viewModel.fetchExpensesByPeriod(
             start: start,
             end: end
         )
-        
+
         viewModel.fetchExpenseStats(
             start: start,
             end: end
         )
     }
-    
+
+    // MARK: - 지출 추가 성공 후 새로고침
+
+    private func refreshExpenses() {
+
+        switch selectedPeriod {
+
+        case .thisMonth:
+            fetchThisMonth()
+
+        case .lastMonth:
+            fetchLastMonth()
+
+        case .custom:
+            fetchCustomPeriod()
+        }
+    }
+
     // MARK: - 월 시작일 / 종료일
-    
+
     private func monthRange(from date: Date) -> (start: String, end: String) {
         let calendar = Calendar.current
-        
+
         guard let interval = calendar.dateInterval(
             of: .month,
             for: date
         ) else {
             return ("", "")
         }
-        
+
         let startDate = interval.start
-        
+
         let endDate = calendar.date(
             byAdding: .day,
             value: -1,
             to: interval.end
         ) ?? interval.end
-        
+
         return (
             formatDate(startDate),
             formatDate(endDate)
         )
     }
-    
+
     // MARK: - 날짜 포맷
-    
+
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        
+
         return formatter.string(from: date)
     }
-    
+
     // MARK: - 기간 표시
-    
+
     private var periodTitle: String {
         switch selectedPeriod {
         case .thisMonth:
             return "이번 달"
-            
+
         case .lastMonth:
             return "지난 달"
-            
+
         case .custom:
             return "\(formatDate(startDate)) ~ \(formatDate(endDate))"
         }
     }
-    
+
     // MARK: - 금액 포맷
-    
+
     private func formatAmount(_ amount: Int) -> String {
         amount.formatted() + "원"
     }
-    
+
     // MARK: - Expense Period
-    
+
     enum ExpensePeriod {
         case thisMonth
         case lastMonth
         case custom
-        
+
         var title: String {
             switch self {
             case .thisMonth:
                 return "이번 달"
-                
+
             case .lastMonth:
                 return "지난 달"
-                
+
             case .custom:
                 return "기간 선택"
             }

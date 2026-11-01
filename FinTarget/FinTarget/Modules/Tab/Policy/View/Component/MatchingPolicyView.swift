@@ -9,6 +9,8 @@ import SwiftUI
 struct MatchingPolicyView: View {
     
     @ObservedObject var viewModel: PolicyViewModel
+    @State private var selectedPolicy: PolicyDTO?
+    @State private var showPolicyDetail = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -77,6 +79,10 @@ struct MatchingPolicyView: View {
                                 isScrapped: isScrapped(policy),
                                 onScrapTapped: {
                                     toggleScrap(policy)
+                                },
+                                onDetailTapped: {
+                                    selectedPolicy = policy
+                                    showPolicyDetail = true
                                 }
                             )
                         }
@@ -91,11 +97,18 @@ struct MatchingPolicyView: View {
         .task {
             loadPolicies()
         }
+        .navigationDestination(isPresented: $showPolicyDetail) {
+            if let selectedPolicy {
+                PolicyDetailView(
+                    viewModel: viewModel,
+                    policy: selectedPolicy
+                )
+            }
+        }
     }
     
     
     // MARK: - 정책 목록 조회
-    
     private func loadPolicies() {
         viewModel.getMatchingPolicies()
         viewModel.getMyPolicies()
@@ -103,7 +116,6 @@ struct MatchingPolicyView: View {
     
     
     // MARK: - 스크랩 여부
-    
     private func isScrapped(_ policy: PolicyDTO) -> Bool {
         viewModel.myPolicies.contains {
             $0.policy.policyId == policy.policyId
@@ -119,9 +131,7 @@ struct MatchingPolicyView: View {
         }
     }
     
-    
     // MARK: - 정책 스크랩 추가 / 삭제
-    
     private func toggleScrap(_ policy: PolicyDTO) {
         
         // 이미 스크랩된 정책인 경우 → 스크랩 삭제
@@ -142,12 +152,12 @@ struct MatchingPolicyView: View {
 
 
 // MARK: - 맞춤 정책 카드
-
 struct MatchingPolicyCardView: View {
     
     let policy: PolicyDTO
     let isScrapped: Bool
     let onScrapTapped: () -> Void
+    let onDetailTapped: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -183,8 +193,7 @@ struct MatchingPolicyCardView: View {
             
             
             // MARK: - 정책 설명
-            
-            Text(policy.description)
+            Text(policy.description ?? "정책 설명이 제공되지 않았습니다.")
                 .font(.PretendardMedium(size: 14))
                 .foregroundColor(.gray)
                 .lineSpacing(4)
@@ -192,38 +201,38 @@ struct MatchingPolicyCardView: View {
             
             Divider()
             
-            
+
             // MARK: - 지원 정보
-            
             HStack(spacing: 0) {
                 policyInfoItem(
                     title: "지원 나이",
-                    value: "\(policy.minAge)~\(policy.maxAge)세"
+                    value: formatAgeRange(
+                        minAge: policy.minAge,
+                        maxAge: policy.maxAge
+                    )
                 )
-                
+
                 Spacer()
-                
+
                 policyInfoItem(
                     title: "소득 기준",
                     value: formatAmount(policy.incomeLimit)
                 )
-                
+
                 Spacer()
-                
+
                 policyInfoItem(
                     title: "지원 혜택",
                     value: formatAmount(policy.benefitAmount)
                 )
             }
             
-            
             // MARK: - 상세보기
-            
             HStack {
                 Spacer()
                 
                 Button {
-                    // 추후 상세 화면 연결
+                    onDetailTapped()
                 } label: {
                     HStack(spacing: 4) {
                         Text("자세히 보기")
@@ -287,12 +296,36 @@ struct MatchingPolicyCardView: View {
     
     
     // MARK: - 금액 변환
-    
-    private func formatAmount(_ amount: Int) -> String {
+    private func formatAmount(_ amount: Int?) -> String {
+        guard let amount = amount else {
+            return "정보 없음"
+        }
         if amount >= 10_000 {
             return "\(amount / 10_000)만원"
         }
-        
         return "\(amount)원"
+    }
+    
+    // MARK: - 지원 나이 포맷팅
+
+    private func formatAgeRange(
+        minAge: Int?,
+        maxAge: Int?
+    ) -> String {
+
+        switch (minAge, maxAge) {
+
+        case let (min?, max?):
+            return "\(min)~\(max)세"
+
+        case let (min?, nil):
+            return "\(min)세 이상"
+
+        case let (nil, max?):
+            return "\(max)세 이하"
+
+        case (nil, nil):
+            return "정보 없음"
+        }
     }
 }

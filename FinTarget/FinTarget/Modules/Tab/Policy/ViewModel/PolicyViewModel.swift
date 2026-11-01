@@ -6,6 +6,7 @@
 
 import Foundation
 import Combine
+import Moya
 
 @MainActor
 final class PolicyViewModel: ObservableObject {
@@ -37,7 +38,6 @@ final class PolicyViewModel: ObservableObject {
         self.policyService = policyService
     }
     
-    
     // MARK: - 나에게 맞는 정책 목록 조회
     func getMatchingPolicies(policyType: String? = nil) {
         isLoading = true
@@ -64,7 +64,7 @@ final class PolicyViewModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
-    
+
     
     // MARK: - 내가 스크랩한 정책 목록 조회
     func getMyPolicies() {

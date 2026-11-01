@@ -3,20 +3,26 @@
 //  FinTarget
 //
 //  Created by 박병선 on 5/4/26.
-
 import SwiftUI
 
 struct SimulationView: View {
 
-    @State private var selectedPeriod = "6개월"
+    // MARK: - ViewModel
 
-    let periods = ["6개월", "1년", "3년", "전체"]
+    @StateObject private var viewModel = SimulationViewModel()
+    @StateObject private var homeViewModel = HomeViewModel()
+
+    // MARK: - State
+
+    @State private var monthlySaving: String = "500000"
+
+    // MARK: - Body
 
     var body: some View {
 
         VStack(spacing: 0) {
 
-            // MARK: Header
+            // MARK: - Header
 
             HStack {
 
@@ -24,14 +30,6 @@ struct SimulationView: View {
                     .font(.PretendardBold(size: 32))
 
                 Spacer()
-
-                Button {
-
-                } label: {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 24))
-                        .foregroundColor(.blue)
-                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
@@ -41,301 +39,111 @@ struct SimulationView: View {
 
                 VStack(spacing: 20) {
 
-                    // MARK: D-Day Card
+                    // MARK: - 목표 조회 중
 
-                    VStack(alignment: .leading, spacing: 20) {
+                    if homeViewModel.isLoading {
 
-                        VStack(alignment: .leading, spacing: 8) {
+                        ProgressView("목표 정보를 불러오는 중...")
+                            .padding(.top, 40)
 
-                            Text("전세 자금 1억 목표까지")
+                    // MARK: - 목표가 존재하는 경우
+
+                    } else if let goal = homeViewModel.goal {
+
+                        // MARK: - 시뮬레이션 입력
+
+                        SimulationInputCard(
+                            monthlySaving: $monthlySaving,
+                            isLoading: viewModel.isLoading,
+                            onRunSimulation: {
+                                runSimulation()
+                            }
+                        )
+
+                        // MARK: - 시뮬레이션 실행 중
+
+                        if viewModel.isLoading {
+
+                            ProgressView("시뮬레이션 실행 중...")
+                                .padding()
+                        }
+
+                        // MARK: - 시뮬레이션 결과
+
+                        if let result = viewModel.simulationResult {
+
+                            SimulationGoalCard(
+                                simulation: result,
+                                goalTitle: goal.title
+                            )
+                        }
+
+                        // MARK: - 에러 메시지
+
+                        if let errorMessage = viewModel.errorMessage {
+
+                            Text(errorMessage)
+                                .font(.PretendardMedium(size: 14))
+                                .foregroundColor(.red)
+                        }
+
+                    // MARK: - 목표가 없는 경우
+
+                    } else {
+
+                        VStack(spacing: 16) {
+
+                            Image(systemName: "target")
+                                .font(.system(size: 48))
+                                .foregroundColor(.gray)
+
+                            Text("등록된 목표가 없습니다.")
+                                .font(.PretendardBold(size: 20))
+
+                            Text("시뮬레이션을 실행하려면\n먼저 목표를 설정해 주세요.")
                                 .font(.PretendardMedium(size: 14))
                                 .foregroundColor(.gray)
-
-                            HStack {
-
-                                Text("D-247")
-                                    .font(.PretendardBold(size: 50))
-
-                                Spacer()
-
-                                Text("정책 적용 시 43일 단축")
-                                    .font(.PretendardSemiBold(size: 14))
-                                    .foregroundColor(.blue)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Color.blue.opacity(0.1))
-                                    .cornerRadius(20)
-                            }
-
-                            Text("목표일 2027년 1월 8일")
-                                .font(.PretendardMedium(size: 15))
-                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
                         }
-
-                        Divider()
-
-                        Text("이 D-Day가 산출된 근거")
-                            .font(.PretendardBold(size: 18))
-
-                        LazyVGrid(
-                            columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible())
-                            ],
-                            spacing: 12
-                        ) {
-
-                            metricCard(
-                                title: "현재 누적 자산",
-                                value: "3,240만원",
-                                sub: "목표 대비 32%"
-                            )
-
-                            metricCard(
-                                title: "월 납입금",
-                                value: "55만원",
-                                sub: "소득 대비 34%"
-                            )
-
-                            metricCard(
-                                title: "정책 월 기여분",
-                                value: "+8.3만원",
-                                sub: "청년도약계좌 기준",
-                                valueColor: .blue
-                            )
-
-                            metricCard(
-                                title: "예상 월 순저축",
-                                value: "63.3만원",
-                                sub: "납입금 + 정책 혜택"
-                            )
-                        }
-
-                        VStack(alignment: .leading, spacing: 8) {
-
-                            HStack {
-
-                                Text("목표 달성률")
-                                    .font(.PretendardMedium(size: 14))
-
-                                Spacer()
-
-                                Text("63% (정책 적용 시)")
-                                    .font(.PretendardBold(size: 14))
-                                    .foregroundColor(.blue)
-                            }
-
-                            ProgressView(value: 0.63)
-                                .tint(.blue)
-
-                            HStack(spacing: 16) {
-
-                                Label(
-                                    "정책 미적용 52%",
-                                    systemImage: "circle.fill"
-                                )
-
-                                Label(
-                                    "정책 적용 63%",
-                                    systemImage: "circle.fill"
-                                )
-                            }
-                            .font(.PretendardMedium(size: 12))
-                            .foregroundColor(.gray)
-                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 80)
                     }
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(20)
-
-                    // MARK: 기간 선택
-
-                    HStack(spacing: 0) {
-
-                        ForEach(periods, id: \.self) { period in
-
-                            Button {
-
-                                selectedPeriod = period
-
-                            } label: {
-
-                                Text(period)
-                                    .font(.PretendardSemiBold(size: 16))
-                                    .foregroundColor(
-                                        selectedPeriod == period
-                                        ? .blue
-                                        : .gray
-                                    )
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        selectedPeriod == period
-                                        ? Color.white
-                                        : Color.clear
-                                    )
-                            }
-                        }
-                    }
-                    .padding(4)
-                    .background(Color(.systemGray5))
-                    .cornerRadius(14)
-
-                    // MARK: 그래프 카드
-
-                    VStack(alignment: .leading, spacing: 20) {
-
-                        HStack {
-
-                            Text("자산 성장 시뮬레이션")
-                                .font(.PretendardBold(size: 22))
-
-                            Spacer()
-
-                            HStack(spacing: 12) {
-
-                                Label("정책 적용", systemImage: "circle.fill")
-                                    .foregroundColor(.blue)
-
-                                Label("기본", systemImage: "circle.fill")
-                                    .foregroundColor(.gray.opacity(0.4))
-                            }
-                            .font(.PretendardMedium(size: 12))
-                        }
-
-                        ZStack {
-
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.blue.opacity(0.05))
-
-                            VStack {
-
-                                Spacer()
-
-                                Image(systemName: "chart.line.uptrend.xyaxis")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.blue)
-
-                                Text("그래프 영역")
-                                    .foregroundColor(.gray)
-
-                                Spacer()
-                            }
-                        }
-                        .frame(height: 220)
-                    }
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(20)
-
-                    // MARK: 시나리오 비교
-
-                    VStack(alignment: .leading, spacing: 16) {
-
-                        Text("시나리오 비교")
-                            .font(.PretendardBold(size: 22))
-
-                        HStack(spacing: 12) {
-
-                            scenarioCard(
-                                title: "현재",
-                                amount: "55만원/월",
-                                dday: "D-247",
-                                selected: false
-                            )
-
-                            scenarioCard(
-                                title: "+10% 절약",
-                                amount: "60만원/월",
-                                dday: "D-218 (-29일)",
-                                selected: true
-                            )
-
-                            scenarioCard(
-                                title: "+20% 절약",
-                                amount: "66만원/월",
-                                dday: "D-193 (-54일)",
-                                selected: false
-                            )
-                        }
-                    }
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(20)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 100)
             }
         }
         .background(Color(.systemGray6))
+        .onAppear {
+            homeViewModel.fetchGoal()
+        }
     }
-}
 
-// MARK: Metric Card
+    // MARK: - 시뮬레이션 실행
 
-private func metricCard(
-    title: String,
-    value: String,
-    sub: String,
-    valueColor: Color = .primary
-) -> some View {
+    private func runSimulation() {
 
-    VStack(alignment: .leading, spacing: 8) {
+        // 목표 정보 확인
+        guard let goal = homeViewModel.goal else {
+            print("❌ 목표 정보가 없습니다.")
+            return
+        }
 
-        Text(title)
-            .font(.PretendardMedium(size: 13))
-            .foregroundColor(.gray)
+        // 월 저축액 검증
+        guard let amount = Int(monthlySaving),
+              amount > 0 else {
+            print("❌ 올바른 월 저축액을 입력해 주세요.")
+            return
+        }
 
-        Text(value)
-            .font(.PretendardBold(size: 26))
-            .foregroundColor(valueColor)
+        // 시뮬레이션 실행
+        viewModel.runSimulation(
+            goalId: goal.goalId,
+            monthlySaving: amount
+        )
 
-        Text(sub)
-            .font(.PretendardMedium(size: 12))
-            .foregroundColor(.gray)
+        print("🚀 시뮬레이션 실행 요청")
+        print("Goal ID: \(goal.goalId)")
+        print("월 저축액: \(amount)")
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding()
-    .background(Color(.systemGray6))
-    .cornerRadius(12)
-}
-
-// MARK: Scenario Card
-
-private func scenarioCard(
-    title: String,
-    amount: String,
-    dday: String,
-    selected: Bool
-) -> some View {
-
-    VStack(spacing: 8) {
-
-        Text(title)
-            .font(.PretendardMedium(size: 13))
-            .foregroundColor(selected ? .blue : .gray)
-
-        Text(amount)
-            .font(.PretendardBold(size: 18))
-
-        Text(dday)
-            .font(.PretendardMedium(size: 12))
-            .foregroundColor(selected ? .blue : .gray)
-    }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 20)
-    .background(Color.white)
-    .overlay(
-        RoundedRectangle(cornerRadius: 12)
-            .stroke(
-                selected ? Color.blue : Color.gray.opacity(0.2),
-                lineWidth: selected ? 2 : 1
-            )
-    )
-    .cornerRadius(12)
-}//
-
-
-#Preview{
-    SimulationView()
 }

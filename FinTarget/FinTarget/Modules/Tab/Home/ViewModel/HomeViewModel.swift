@@ -167,7 +167,7 @@ final class HomeViewModel: ObservableObject {
     
     // MARK: - 목표 조회
     /// 사용자가 등록해놨었던 목표 조회 api
-    private func fetchGoal() {
+    func fetchGoal() {
         isLoading = true
         goalService.getGoal()
             .receive(on: DispatchQueue.main)
@@ -330,29 +330,36 @@ final class HomeViewModel: ObservableObject {
     }
 
     // MARK: - 지출 내역 동기화
-    /// 사용자의 지출 내역 동기화 api
-    func syncExpenses(request: [ExpenseSyncRequestDTO]) {
+    /// 사용자의 지출 내역 동기화 API
+    func syncExpenses(
+        request: [ExpenseSyncRequestDTO],
+        completion: @escaping (Bool) -> Void
+    ) {
         isLoading = true
         errorMessage = nil
-        
+
         expenseService.syncExpenses(request: request)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { [weak self] completion in
+                receiveCompletion: { [weak self] result in
                     guard let self else { return }
-                    
+
                     self.isLoading = false
-                    
-                    if case .failure(let error) = completion {
+
+                    if case .failure(let error) = result {
                         self.errorMessage = error.localizedDescription
+
                         print("❌ 지출 내역 동기화 실패: \(error)")
+
+                        completion(false)
                     }
                 },
-                receiveValue: { [weak self] response in
-                    guard let self else { return }
-                    
+                receiveValue: { response in
+
                     print("✅ 지출 내역 동기화 성공")
                     print("응답 메시지: \(response.message)")
+
+                    completion(true)
                 }
             )
             .store(in: &cancellables)
