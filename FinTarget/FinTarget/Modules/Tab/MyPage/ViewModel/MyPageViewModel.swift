@@ -47,6 +47,7 @@ final class MyPageViewModel: ObservableObject {
         self.goalService = goalService
         self.sessionManager = sessionManager
     }
+    
     // MARK: - 내 프로필 조회 API
     func getMyProfile() {
         isLoading = true
@@ -80,49 +81,62 @@ final class MyPageViewModel: ObservableObject {
     
     
     // MARK: - 프로필 수정 API
+
     func updateMyProfile(
         name: String? = nil,
+        email: String? = nil,
         region: String? = nil,
-        ageGroup: String? = nil,
+        birthYear: Int? = nil,
         employmentType: String? = nil,
-        incomeBracket: String? = nil
+        incomeBracket: String? = nil,
+        housingStatus: String? = nil
     ) {
         isLoading = true
         errorMessage = nil
         isProfileUpdated = false
-        
+
+        // MARK: - Request DTO
+
         let request = UpdateUserProfileRequestDTO(
             name: name,
+            email: email,
             region: region,
-            ageGroup: ageGroup,
+            birthYear: birthYear,
             employmentType: employmentType,
-            incomeBracket: incomeBracket
+            incomeBracket: incomeBracket,
+            housingStatus: housingStatus
         )
-        
+
+        // MARK: - API Request
+
         userService.updateMyProfile(request: request)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 guard let self = self else { return }
-                
+
                 self.isLoading = false
-                
+
                 if case .failure(let error) = completion {
                     self.errorMessage = error.localizedDescription
                     print("❌ 프로필 수정 실패: \(error)")
                 }
-                
+
             } receiveValue: { [weak self] response in
                 guard let self = self else { return }
-                
+
+                // MARK: - 프로필 데이터 갱신
+
                 self.userProfile = response.data
                 self.isProfileUpdated = true
-                
+
                 print("✅ 프로필 수정 성공")
-                print("이름: \(response.data.name)")
-                print("지역: \(response.data.region)")
-                print("연령대: \(response.data.ageGroup)")
-                print("직업 유형: \(response.data.employmentType)")
-                print("소득 구간: \(response.data.incomeBracket)")
+                print("이름: \(response.data.name ?? "정보 없음")")
+                print("이메일: \(response.data.email ?? "정보 없음")")
+                print("지역: \(response.data.region ?? "정보 없음")")
+                print("출생연도: \(response.data.birthYear.map(String.init) ?? "정보 없음")")
+                print("직업 유형: \(response.data.employmentType ?? "정보 없음")")
+                print("소득 구간: \(response.data.incomeBracket ?? "정보 없음")")
+                print("주택 소유 여부: \(response.data.housingStatus ?? "정보 없음")")
             }
             .store(in: &cancellables)
     }

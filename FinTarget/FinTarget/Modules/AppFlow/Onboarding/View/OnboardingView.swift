@@ -298,12 +298,11 @@ struct OnboardingView: View {
             }
 
             // MARK: - Answer Summary
-
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(viewModel.answeredQuestions) { item in
                     OnboardingSummaryRow(
                         title: item.question,
-                        value: item.answer
+                        value: formattedAnswer(item)
                     )
                 }
             }
@@ -330,5 +329,28 @@ struct OnboardingView: View {
             }
         }
         .padding(.horizontal, 24)
+    }
+    
+    // MARK: - 온보딩 답변 포맷팅
+
+    private func formattedAnswer(_ item: OnboardingAnswer) -> String {
+
+        // 목표 금액 질문인지 확인
+        if item.question.contains("목표 자산") ||
+           item.question.contains("목표 금액") {
+
+            // 숫자만 추출
+            let numbers = item.answer.filter {
+                $0.isASCII && $0.isNumber
+            }
+
+            // 천 단위 쉼표 적용
+            if let amount = Int(numbers) {
+                return "\(amount.formatted())원"
+            }
+        }
+
+        // 나머지 답변은 기존 값 유지
+        return item.answer
     }
 }

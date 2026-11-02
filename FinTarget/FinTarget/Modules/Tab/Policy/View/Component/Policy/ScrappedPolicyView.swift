@@ -110,6 +110,14 @@ struct ScrappedPolicyView: View {
         .task {
             loadPolicies()
         }
+        .navigationDestination(isPresented: $showPolicyDetail) {
+            if let selectedPolicy {
+                PolicyDetailView(
+                    viewModel: viewModel,
+                    policy: selectedPolicy
+                )
+            }
+        }
     }
     
     

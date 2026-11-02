@@ -11,11 +11,28 @@ struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: MyPageViewModel
 
+    // MARK: - Properties
+
     @State private var name: String = ""
+    @State private var email: String = ""
     @State private var region: String = ""
-    @State private var ageGroup: String = ""
+    @State private var birthYear: Int?
     @State private var employmentType: String = ""
     @State private var incomeBracket: String = ""
+    @State private var housingStatus: String = ""
+
+    @State private var showErrorAlert = false
+
+    private var currentYear: Int {
+        Calendar(identifier: .gregorian)
+            .component(.year, from: Date())
+    }
+
+    private var maximumYear: Int {
+        currentYear - 14
+    }
+
+    // MARK: - Body
 
     var body: some View {
 
@@ -69,30 +86,51 @@ struct EditProfileView: View {
                             .padding()
                             .background(Color(.secondarySystemBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .onChange(of: name) { _, newValue in
+                                if newValue.count > 20 {
+                                    name = String(newValue.prefix(20))
+                                }
+                            }
                     }
 
-                    // MARK: - 연령대
+                    // MARK: - 이메일
+                    VStack(alignment: .leading, spacing: 8) {
+
+                        Text("이메일")
+                            .font(.PretendardMedium(size: 15))
+
+                        TextField("이메일을 입력해주세요", text: $email)
+                            .font(.PretendardMedium(size: 16))
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+
+                    // MARK: - 출생연도
 
                     VStack(alignment: .leading, spacing: 12) {
 
-                        Text("연령대")
+                        Text("출생연도")
                             .font(.PretendardMedium(size: 15))
 
-                        HStack {
-                            selectionChip(
-                                "청년",
-                                selected: ageGroup == "YOUTH"
-                            ) {
-                                ageGroup = "YOUTH"
-                            }
-
-                            selectionChip(
-                                "중장년",
-                                selected: ageGroup == "MIDDLE"
-                            ) {
-                                ageGroup = "MIDDLE"
+                        Picker(
+                            "출생연도",
+                            selection: Binding(
+                                get: { birthYear ?? 2002 },
+                                set: { birthYear = $0 }
+                            )
+                        ) {
+                            ForEach(1940...maximumYear, id: \.self) { year in
+                                Text("\(year, format: .number.grouping(.never))년")
+                                    .tag(year)
                             }
                         }
+                        .pickerStyle(.wheel)
+                        .frame(height: 150)
+                        .clipped()
                     }
 
                     // MARK: - 거주지
@@ -116,26 +154,54 @@ struct EditProfileView: View {
                         Text("월 소득")
                             .font(.PretendardMedium(size: 15))
 
-                        HStack {
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ],
+                            spacing: 12
+                        ) {
+
                             selectionChip(
-                                "200만원 미만",
-                                selected: incomeBracket == "UNDER_2M"
+                                "150만원 미만",
+                                selected: incomeBracket == "UNDER_150"
                             ) {
-                                incomeBracket = "UNDER_2M"
+                                incomeBracket = "UNDER_150"
                             }
 
                             selectionChip(
-                                "200~300만원",
-                                selected: incomeBracket == "200_300"
+                                "150~260만원",
+                                selected: incomeBracket == "150_260"
                             ) {
-                                incomeBracket = "200_300"
+                                incomeBracket = "150_260"
                             }
 
                             selectionChip(
-                                "300만원 이상",
-                                selected: incomeBracket == "OVER_3M"
+                                "260~300만원",
+                                selected: incomeBracket == "260_300"
                             ) {
-                                incomeBracket = "OVER_3M"
+                                incomeBracket = "260_300"
+                            }
+
+                            selectionChip(
+                                "300~380만원",
+                                selected: incomeBracket == "300_380"
+                            ) {
+                                incomeBracket = "300_380"
+                            }
+
+                            selectionChip(
+                                "380~410만원",
+                                selected: incomeBracket == "380_410"
+                            ) {
+                                incomeBracket = "380_410"
+                            }
+
+                            selectionChip(
+                                "410만원 이상",
+                                selected: incomeBracket == "OVER_410"
+                            ) {
+                                incomeBracket = "OVER_410"
                             }
                         }
                     }
@@ -147,7 +213,14 @@ struct EditProfileView: View {
                         Text("직업 유형")
                             .font(.PretendardMedium(size: 15))
 
-                        HStack {
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ],
+                            spacing: 12
+                        ) {
+
                             selectionChip(
                                 "직장인",
                                 selected: employmentType == "EMPLOYED"
@@ -156,7 +229,7 @@ struct EditProfileView: View {
                             }
 
                             selectionChip(
-                                "무직",
+                                "구직중",
                                 selected: employmentType == "UNEMPLOYED"
                             ) {
                                 employmentType = "UNEMPLOYED"
@@ -174,6 +247,31 @@ struct EditProfileView: View {
                                 selected: employmentType == "SELF_EMPLOYED"
                             ) {
                                 employmentType = "SELF_EMPLOYED"
+                            }
+                        }
+                    }
+
+                    // MARK: - 주택 소유 여부
+
+                    VStack(alignment: .leading, spacing: 12) {
+
+                        Text("주택 소유 여부")
+                            .font(.PretendardMedium(size: 15))
+
+                        HStack(spacing: 12) {
+
+                            selectionChip(
+                                "무주택",
+                                selected: housingStatus == "HOMELESS"
+                            ) {
+                                housingStatus = "HOMELESS"
+                            }
+
+                            selectionChip(
+                                "주택 소유",
+                                selected: housingStatus == "HOMEOWNER"
+                            ) {
+                                housingStatus = "HOMEOWNER"
                             }
                         }
                     }
@@ -208,7 +306,7 @@ struct EditProfileView: View {
             .padding()
         }
         .navigationBarBackButtonHidden(true)
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             setInitialProfile()
         }
@@ -217,27 +315,52 @@ struct EditProfileView: View {
                 dismiss()
             }
         }
+        .onChange(of: viewModel.errorMessage) { _, newValue in
+            showErrorAlert = newValue != nil
+        }
+        .alert("프로필 수정 실패", isPresented: $showErrorAlert) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "잠시 후 다시 시도해주세요.")
+        }
     }
 
     // MARK: - 초기 프로필 설정
 
     private func setInitialProfile() {
-        name = viewModel.userProfile?.name ?? ""
-        region = viewModel.userProfile?.region ?? ""
-        ageGroup = viewModel.userProfile?.ageGroup ?? ""
-        employmentType = viewModel.userProfile?.employmentType ?? ""
-        incomeBracket = viewModel.userProfile?.incomeBracket ?? ""
+
+        guard let profile = viewModel.userProfile else {
+            return
+        }
+
+        name = profile.name ?? ""
+        email = profile.email ?? ""
+        region = profile.region ?? ""
+        birthYear = profile.birthYear
+        employmentType = profile.employmentType ?? ""
+        incomeBracket = profile.incomeBracket ?? ""
+        housingStatus = profile.housingStatus ?? ""
     }
 
     // MARK: - 프로필 저장
 
     private func saveProfile() {
+
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedName.isEmpty else {
+            viewModel.errorMessage = "이름을 입력해주세요."
+            return
+        }
+
         viewModel.updateMyProfile(
-            name: name,
-            region: region,
-            ageGroup: ageGroup,
-            employmentType: employmentType,
-            incomeBracket: incomeBracket
+            name: trimmedName,
+            email: email.isEmpty ? nil : email,
+            region: region.isEmpty ? nil : region,
+            birthYear: birthYear,
+            employmentType: employmentType.isEmpty ? nil : employmentType,
+            incomeBracket: incomeBracket.isEmpty ? nil : incomeBracket,
+            housingStatus: housingStatus.isEmpty ? nil : housingStatus
         )
     }
 
@@ -255,8 +378,9 @@ struct EditProfileView: View {
             Text(title)
                 .font(.PretendardMedium(size: 14))
                 .foregroundColor(selected ? .cyan : .black)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 12)
                 .overlay {
                     Capsule()
                         .stroke(

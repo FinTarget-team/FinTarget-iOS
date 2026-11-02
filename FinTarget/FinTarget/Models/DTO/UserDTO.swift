@@ -8,33 +8,37 @@ import Foundation
 
 // MARK: - 내 프로필 조회
 
-/// 내 프로필 조회 응답 DTO
+/// 내 프로필 조회 응답 DTO, 프로필 수정응답 DTO
 struct UserProfileResponseDTO: Decodable {
-    let status: Int ///HTTP 상태 코드
-    let message: String /// 서버 메세지 
+    let status: Int
+    let message: String
     let data: UserProfileDataDTO
 }
 
-/// 사용자 프로필 데이터 DTO
 struct UserProfileDataDTO: Decodable {
-    let userId: String /// 사용자ID
+    let userId: String
     let name: String?
     let email: String?
     let region: String?
-    let provider: String /// 수정할 사용자 거주 지역
-    let ageGroup: String?
+    let provider: String
+    let birthYear: Int?
     let employmentType: String?
     let incomeBracket: String?
+    let housingStatus: String?
+    let onboardingCompleted: Bool?
 }
 
-// MARK: - 프로필 수정
-/// 프로필 수정 요청 DTO
+
+// MARK: - 프로필 수정 요청 DTO
+
 struct UpdateUserProfileRequestDTO: Encodable {
     let name: String?
+    let email: String?
     let region: String?
-    let ageGroup: String?
+    let birthYear: Int?
     let employmentType: String?
-    let incomeBracket: String?
+    let incomeBracket: String? /// 소득 구간
+    let housingStatus: String? /// 주택 소유 여부
 }
 
 // MARK: - 회원 탈퇴

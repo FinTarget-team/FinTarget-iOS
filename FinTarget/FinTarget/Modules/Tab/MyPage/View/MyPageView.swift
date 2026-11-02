@@ -88,50 +88,80 @@ struct MyPageView: View {
     }
 
     // MARK: - 내 정보
+
     private var myInfo: some View {
         VStack(alignment: .leading, spacing: 20) {
-            
+
             Text("내 정보")
                 .font(.PretendardBold(size: 20))
-            
+
+            // MARK: - 출생연도
+
             NavigationLink {
                 EditProfileView(viewModel: viewModel)
             } label: {
                 infoRow(
-                    "연령대",
-                    ageGroupDisplayName(viewModel.userProfile?.ageGroup)
+                    "출생연도",
+                    UserProfileFormatter.birthYear(
+                        viewModel.userProfile?.birthYear
+                    )
                 )
             }
-            
+
+            // MARK: - 거주지
+
             NavigationLink {
                 EditProfileView(viewModel: viewModel)
             } label: {
                 infoRow(
                     "거주지",
-                    viewModel.userProfile?.region ?? "-"
+                    UserProfileFormatter.region(
+                        viewModel.userProfile?.region
+                    )
                 )
             }
-            
+
+            // MARK: - 월 소득
+
             NavigationLink {
                 EditProfileView(viewModel: viewModel)
             } label: {
                 infoRow(
                     "월 소득",
-                    incomeBracketDisplayName(viewModel.userProfile?.incomeBracket)
+                    UserProfileFormatter.incomeBracket(
+                        viewModel.userProfile?.incomeBracket
+                    )
                 )
             }
-            
+
+            // MARK: - 직업 유형
+
             NavigationLink {
                 EditProfileView(viewModel: viewModel)
             } label: {
                 infoRow(
                     "직업 유형",
-                    employmentTypeDisplayName(viewModel.userProfile?.employmentType)
+                    UserProfileFormatter.employmentType(
+                        viewModel.userProfile?.employmentType
+                    )
+                )
+            }
+
+            // MARK: - 주택 소유 여부
+
+            NavigationLink {
+                EditProfileView(viewModel: viewModel)
+            } label: {
+                infoRow(
+                    "주택 소유 여부",
+                    UserProfileFormatter.housingStatus(
+                        viewModel.userProfile?.housingStatus
+                    )
                 )
             }
         }
     }
-
+    
     // MARK: - 현재 목표
     private var currentGoal: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -216,10 +246,11 @@ struct MyPageView: View {
         return String(firstCharacter)
     }
 
+    // MARK: - Profile Helpers
     private var profileDescription: String {
-        let region = viewModel.userProfile?.region ?? "-"
-        
-        return region
+        UserProfileFormatter.region(
+            viewModel.userProfile?.region
+        )
     }
 
     // MARK: - Row Builders
@@ -246,48 +277,5 @@ struct MyPageView: View {
         .contentShape(Rectangle())
     }
     
-    // MARK: - Display Helpers
-
-    /// 연령대 한글 변환
-    private func ageGroupDisplayName(_ value: String?) -> String {
-        switch value {
-        case "YOUTH":
-            return "청년"
-        case "MIDDLE":
-            return "중장년"
-        default:
-            return "-"
-        }
-    }
-
-    /// 직업 유형 한글 변환
-    private func employmentTypeDisplayName(_ value: String?) -> String {
-        switch value {
-        case "EMPLOYED":
-            return "직장인"
-        case "UNEMPLOYED":
-            return "무직"
-        case "STUDENT":
-            return "학생"
-        case "SELF_EMPLOYED":
-            return "자영업자"
-        default:
-            return "-"
-        }
-    }
-
-    /// 월 소득 한글 변환
-    private func incomeBracketDisplayName(_ value: String?) -> String {
-        switch value {
-        case "UNDER_2M":
-            return "200만원 미만"
-        case "200_300":
-            return "200~300만원"
-        case "OVER_3M":
-            return "300만원 이상"
-        default:
-            return "-"
-        }
-    }
 }
 

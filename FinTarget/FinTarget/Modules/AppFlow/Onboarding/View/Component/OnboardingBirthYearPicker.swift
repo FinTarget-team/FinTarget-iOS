@@ -47,7 +47,7 @@ struct OnboardingBirthYearPicker: View {
 
             Picker("출생연도", selection: $selectedYear) {
                 ForEach(years, id: \.self) { year in
-                    Text("\(year)년")
+                    Text("\(year, format: .number.grouping(.never))년")
                         .font(.system(size: 22))
                         .tag(year)
                 }

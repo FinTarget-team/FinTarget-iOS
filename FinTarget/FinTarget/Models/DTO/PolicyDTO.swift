@@ -67,3 +67,35 @@ struct DeleteUserPolicyResponseDTO: Decodable {
     let message: String /// 응답 메시지
     let data: String? /// 삭제 성공 시 null
 }
+
+// MARK: - 정책 AI 질문
+
+/// 정책 AI 질문 요청 DTO
+struct PolicyAIChatRequestDTO: Encodable {
+    let question: String /// 사용자가 입력한 질문
+    let conversationId: String? /// 기존 대화 ID (첫 질문에서는 nil)
+}
+
+/// 정책 AI 질문 응답 DTO
+struct PolicyAIChatResponseDTO: Decodable {
+    let status: Int /// 응답 상태 코드
+    let message: String /// 응답 메시지
+    let data: PolicyAIChatDataDTO /// AI 답변 데이터
+}
+
+/// 정책 AI 답변 데이터 DTO
+struct PolicyAIChatDataDTO: Decodable {
+    let conversationId: String /// 현재 대화 ID
+    let answer: String /// AI 답변
+    let remainingTurns: Int /// 남은 질문 횟수
+    let sourceLimited: Bool /// 정책 원문 정보 부족 여부
+}
+
+// MARK: - 정책 AI 대화 삭제
+
+/// 정책 AI 대화 삭제 응답 DTO
+struct DeletePolicyAIChatResponseDTO: Decodable {
+    let status: Int /// 응답 상태 코드
+    let message: String /// 응답 메시지
+    let data: String? /// 삭제 성공 시 null
+}

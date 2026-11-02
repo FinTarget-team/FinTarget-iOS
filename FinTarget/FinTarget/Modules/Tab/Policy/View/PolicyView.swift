@@ -11,7 +11,6 @@ struct PolicyView: View {
     @StateObject private var viewModel = PolicyViewModel()
     
     var body: some View {
-        NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 32) {
 
@@ -24,7 +23,6 @@ struct PolicyView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 100)
             }
-        }
     }
     
     
@@ -217,9 +215,4 @@ struct MonthlyPolicyCard: View {
                 .stroke(Color(.systemGray5), lineWidth: 1)
         )
     }
-}
-
-
-#Preview {
-    PolicyView()
 }
