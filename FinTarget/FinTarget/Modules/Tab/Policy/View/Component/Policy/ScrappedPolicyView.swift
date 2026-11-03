@@ -16,7 +16,9 @@ struct ScrappedPolicyView: View {
             
             // MARK: - 로딩
             
-            if viewModel.isLoading {
+            if viewModel.isMyPoliciesLoading
+                || !viewModel.hasLoadedMyPolicies {
+                
                 Spacer()
                 
                 ProgressView("스크랩한 정책을 불러오는 중...")
@@ -25,7 +27,8 @@ struct ScrappedPolicyView: View {
                 
             // MARK: - 에러
             
-            } else if let errorMessage = viewModel.errorMessage {
+            } else if let errorMessage = viewModel.myPoliciesError {
+                
                 Spacer()
                 
                 VStack(spacing: 12) {
@@ -39,6 +42,7 @@ struct ScrappedPolicyView: View {
                     Text(errorMessage)
                         .font(.PretendardMedium(size: 14))
                         .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
                     
                     Button {
                         loadPolicies()
@@ -46,13 +50,16 @@ struct ScrappedPolicyView: View {
                         Text("다시 시도")
                             .font(.PretendardBold(size: 14))
                     }
+                    .padding(.top, 8)
                 }
+                .padding(.horizontal, 20)
                 
                 Spacer()
                 
             // MARK: - 빈 목록
             
             } else if viewModel.myPolicies.isEmpty {
+                
                 Spacer()
                 
                 VStack(spacing: 12) {
@@ -73,6 +80,7 @@ struct ScrappedPolicyView: View {
             // MARK: - 스크랩 정책 목록
             
             } else {
+                
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 16) {
                         
@@ -84,8 +92,8 @@ struct ScrappedPolicyView: View {
                             viewModel.myPolicies,
                             id: \.userPolicyId
                         ) { userPolicy in
-
-                            MatchingPolicyCardView(
+                            
+                            MatchingPolicySection(
                                 policy: userPolicy.policy,
                                 isScrapped: true,
                                 onScrapTapped: {
@@ -107,9 +115,13 @@ struct ScrappedPolicyView: View {
         }
         .navigationTitle("스크랩한 정책")
         .navigationBarTitleDisplayMode(.inline)
+        
+        // MARK: - 화면 진입 시 스크랩 정책 조회
         .task {
             loadPolicies()
         }
+        
+        // MARK: - 정책 상세 화면 이동
         .navigationDestination(isPresented: $showPolicyDetail) {
             if let selectedPolicy {
                 PolicyDetailView(

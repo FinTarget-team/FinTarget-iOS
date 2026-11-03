@@ -12,7 +12,6 @@ struct PolicyDetailView: View {
 
     let policy: PolicyDTO
 
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.isTabBarHidden) private var isTabBarHidden
 
     // MARK: - Body
@@ -27,22 +26,32 @@ struct PolicyDetailView: View {
 
                 VStack(alignment: .leading, spacing: 16) {
 
-                    Text(policyTypeTitle)
-                        .font(.PretendardMedium(size: 13))
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
+                    Text(
+                        PolicyFormatter.formatPolicyType(
+                            policy.policyType
+                        )
+                    )
+                    .font(.PretendardMedium(size: 13))
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
 
                     Text(policy.name)
                         .font(.PretendardBold(size: 26))
                         .foregroundColor(.black)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                    Text(policy.description ?? "정책 설명이 제공되지 않았습니다.")
-                        .font(.PretendardMedium(size: 15))
-                        .foregroundColor(.gray)
-                        .lineSpacing(5)
+                    // 정책 설명은 상세 화면에서만 전체 표시
+                    Text(
+                        policy.description
+                        ?? "정책 설명이 제공되지 않았습니다."
+                    )
+                    .font(.PretendardMedium(size: 15))
+                    .foregroundColor(.gray)
+                    .lineSpacing(5)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Divider()
@@ -53,32 +62,44 @@ struct PolicyDetailView: View {
 
                     Text("지원 정보")
                         .font(.PretendardBold(size: 20))
+                        .foregroundColor(.black)
 
                     VStack(spacing: 20) {
 
+                        // 지원 나이
                         infoRow(
                             title: "지원 나이",
-                            value: formatAgeRange(
+                            value: PolicyFormatter.formatAgeRange(
                                 minAge: policy.minAge,
-                                maxAge: policy.maxAge
+                                maxAge: policy.maxAge,
+                                ageCondition: policy.ageCondition
                             )
                         )
 
                         Divider()
 
+                        // 소득 기준
                         infoRow(
                             title: "소득 기준",
-                            value: formatAmount(policy.incomeLimit)
+                            value: PolicyFormatter.formatIncomeCondition(
+                                incomeCondition: policy.incomeCondition,
+                                incomeLimit: policy.incomeLimit
+                            )
                         )
 
                         Divider()
 
+                        // 지원 혜택
                         infoRow(
                             title: "지원 혜택",
-                            value: formatAmount(policy.benefitAmount)
+                            value: PolicyFormatter.formatSupportContent(
+                                supportContent: policy.supportContent,
+                                benefitAmount: policy.benefitAmount
+                            )
                         )
                     }
                     .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.systemGray6))
                     .cornerRadius(16)
                 }
@@ -159,7 +180,6 @@ struct PolicyDetailView: View {
                 )
                 .cornerRadius(16)
                 .overlay {
-
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(
                             Color.blue.opacity(0.12),
@@ -191,7 +211,9 @@ struct PolicyDetailView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(isScrapped ? Color.gray : Color.blue)
+                    .background(
+                        isScrapped ? Color.gray : Color.blue
+                    )
                     .cornerRadius(12)
                 }
                 .padding(.horizontal, 20)
@@ -213,7 +235,6 @@ struct PolicyDetailView: View {
 
     } // body 종료
 
-
     // MARK: - 스크랩 여부
 
     private var isScrapped: Bool {
@@ -222,7 +243,6 @@ struct PolicyDetailView: View {
         }
     }
 
-
     // MARK: - 스크랩 정책 조회
 
     private var scrappedPolicy: UserPolicyDTO? {
@@ -230,7 +250,6 @@ struct PolicyDetailView: View {
             $0.policy.policyId == policy.policyId
         }
     }
-
 
     // MARK: - 스크랩 추가 / 삭제
 
@@ -251,7 +270,6 @@ struct PolicyDetailView: View {
         }
     }
 
-
     // MARK: - 지원 정보 행
 
     private func infoRow(
@@ -259,82 +277,20 @@ struct PolicyDetailView: View {
         value: String
     ) -> some View {
 
-        HStack {
+        VStack(alignment: .leading, spacing: 8) {
 
             Text(title)
                 .font(.PretendardMedium(size: 14))
                 .foregroundColor(.gray)
 
-            Spacer()
-
             Text(value)
                 .font(.PretendardBold(size: 15))
                 .foregroundColor(.black)
+                .lineSpacing(5)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-
-    // MARK: - 정책 유형
-
-    private var policyTypeTitle: String {
-
-        switch policy.policyType {
-
-        case "HOUSING":
-            return "주거"
-
-        case "FINANCE_WELFARE":
-            return "금융 · 복지"
-
-        case "STARTUP":
-            return "창업"
-
-        case "ETC":
-            return "기타"
-
-        default:
-            return policy.policyType
-        }
-    }
-
-
-    // MARK: - 금액 변환
-
-    private func formatAmount(_ amount: Int?) -> String {
-
-        guard let amount else {
-            return "정보 없음"
-        }
-
-        if amount >= 10_000 {
-            return "\(amount / 10_000)만원"
-        }
-
-        return "\(amount)원"
-    }
-
-
-    // MARK: - 지원 나이 포맷팅
-
-    private func formatAgeRange(
-        minAge: Int?,
-        maxAge: Int?
-    ) -> String {
-
-        switch (minAge, maxAge) {
-
-        case let (min?, max?):
-            return "\(min)~\(max)세"
-
-        case let (min?, nil):
-            return "\(min)세 이상"
-
-        case let (nil, max?):
-            return "\(max)세 이하"
-
-        case (nil, nil):
-            return "정보 없음"
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
 } // PolicyDetailView 종료

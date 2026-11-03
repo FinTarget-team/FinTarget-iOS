@@ -17,6 +17,9 @@ struct PolicyDTO: Decodable {
     let incomeLimit: Int? /// 소득 기준
     let benefitAmount: Int? /// 지원 금액
     let policyType: String /// 정책 유형
+    let ageCondition: String? /// 나이조건
+    let incomeCondition: String? /// 소득 조건
+    let supportContent: String? /// 지원 혜택
 }
 
 
