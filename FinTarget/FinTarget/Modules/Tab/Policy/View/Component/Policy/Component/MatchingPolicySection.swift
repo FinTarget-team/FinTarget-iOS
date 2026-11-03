@@ -118,10 +118,15 @@ struct MatchingPolicySection: View {
             Text(title)
                 .font(.PretendardMedium(size: 12))
                 .foregroundColor(.gray)
+                .frame(width: 65, alignment: .leading)
             
             Text(value)
-                .font(.PretendardBold(size: 14))
+                .font(.PretendardMedium(size: 12))
                 .foregroundColor(.black)
+                .lineLimit(2)
+                .truncationMode(.tail)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
     

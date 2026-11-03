@@ -21,6 +21,9 @@ final class OnboardingViewModel: ObservableObject {
     @Published var textInput: String = "" /// 텍스트 입력형 질문의 입력값
     @Published var errorMessage: String? /// 에러 메시지
 
+    // MARK: - 이전 답변 저장
+    private var savedAnswers: [Int: String] = [:] /// 단계별로 사용자가 입력한 실제 API 전송값 저장
+    private var cachedSteps: [Int: OnboardingStepDataDTO] = [:]  /// 단계별 질문 데이터 캐싱
     // MARK: - Properties
 
     /// 온보딩 API 서비스
@@ -41,8 +44,68 @@ final class OnboardingViewModel: ObservableObject {
         self.onboardingService = onboardingService
         self.sessionManager = sessionManager
     }
+    
+    // MARK: - 입력값 복원
 
-    // MARK: - 온보딩 단계 조회
+    /// 이전에 입력했던 답변을 현재 단계에 복원
+    private func restoreInput(for stepData: OnboardingStepDataDTO) {
+
+        resetInput()
+
+        guard let savedValue = savedAnswers[stepData.step] else {
+            return
+        }
+
+        switch stepData.answerType {
+
+        case "TEXT":
+            textInput = savedValue
+
+        case "NUMBER":
+            numberInput = savedValue
+
+        case "CHIP":
+            selectedOption = stepData.options.first {
+                $0.value == savedValue
+            }
+
+        default:
+            break
+        }
+    }
+    
+    // MARK: - 이전 단계 이동
+
+    /// 온보딩 이전 단계로 이동
+    func goToPreviousStep() {
+
+        guard let currentStep = stepData?.step,
+              currentStep > 1,
+              !isLoading else {
+            return
+        }
+
+        let previousStep = currentStep - 1
+
+        // 이전 단계 데이터가 캐싱되어 있다면 재사용
+        if let cachedData = cachedSteps[previousStep] {
+
+            stepData = cachedData
+
+            // 이전 답변 복원
+            restoreInput(for: cachedData)
+
+            errorMessage = nil
+
+            print("온보딩 이전 단계 이동: \(previousStep)")
+        } else {
+
+            // 캐싱된 데이터가 없다면 API 호출
+            fetchStep(step: previousStep)
+        }
+    }
+
+    // MARK: - 온보딩 단계 조회 API 함수
 
     /// 현재 온보딩 단계 조회
     func fetchStep(step: Int = 1) {
@@ -65,14 +128,23 @@ final class OnboardingViewModel: ObservableObject {
             } receiveValue: { [weak self] response in
                 guard let self else { return }
 
-                self.stepData = response.data
-                self.isCompleted = response.data.complete
+                let data = response.data
+
+                // 단계별 질문 데이터 저장
+                self.cachedSteps[data.step] = data
+
+                // 현재 단계 갱신
+                self.stepData = data
+                self.isCompleted = data.complete
+
+                // 이전에 입력했던 답변 복원
+                self.restoreInput(for: data)
 
                 print("온보딩 단계 조회 성공")
-                print("현재 단계: \(response.data.step)")
-                print("전체 단계: \(response.data.totalSteps)")
-                print("질문: \(response.data.question)")
-                print("답변 타입: \(response.data.answerType)")
+                print("현재 단계: \(data.step)")
+                print("전체 단계: \(data.totalSteps)")
+                print("질문: \(data.question)")
+                print("답변 타입: \(data.answerType)")
             }
             .store(in: &cancellables)
     }
@@ -179,7 +251,7 @@ final class OnboardingViewModel: ObservableObject {
         return false
     }
 
-    // MARK: - 온보딩 답변 제출
+    // MARK: - 온보딩 답변 제출 API 함수
 
     /// 현재 온보딩 단계의 답변 제출
     func submitAnswer() {
@@ -257,13 +329,28 @@ final class OnboardingViewModel: ObservableObject {
             } receiveValue: { [weak self] response in
                 guard let self else { return }
 
-                // 완료된 질문과 답변 저장
-                self.answeredQuestions.append(
-                    OnboardingAnswer(
-                        question: stepData.question,
-                        answer: displayAnswer
-                    )
+                // MARK: - 답변 저장
+
+                // 실제 API 전송값 저장
+                self.savedAnswers[stepData.step] = value
+
+                // 현재 단계 질문 데이터 캐싱
+                self.cachedSteps[stepData.step] = stepData
+
+                // 완료 화면에 표시할 답변 저장
+                let answer = OnboardingAnswer(
+                    question: stepData.question,
+                    answer: displayAnswer
                 )
+
+                // 이미 답변한 질문이라면 기존 답변 수정
+                if let index = self.answeredQuestions.firstIndex(where: {
+                    $0.question == stepData.question
+                }) {
+                    self.answeredQuestions[index] = answer
+                } else {
+                    self.answeredQuestions.append(answer)
+                }
 
                 // 입력 상태 초기화
                 self.resetInput()
@@ -276,12 +363,21 @@ final class OnboardingViewModel: ObservableObject {
 
                     print("온보딩 완료")
                 } else {
-                    // 다음 단계 정보 저장
-                    self.stepData = response.data
+                    
+                    let nextStepData = response.data
+
+                    // 다음 단계 질문 데이터 캐싱
+                    self.cachedSteps[nextStepData.step] = nextStepData
+
+                    // 다음 단계 갱신
+                    self.stepData = nextStepData
+
+                    // 이전에 입력했던 값이 있다면 복원
+                    self.restoreInput(for: nextStepData)
 
                     print("온보딩 답변 제출 성공")
-                    print("다음 단계: \(response.data.step)")
-                    print("다음 질문: \(response.data.question)")
+                    print("다음 단계: \(nextStepData.step)")
+                    print("다음 질문: \(nextStepData.question)")
                 }
             }
             .store(in: &cancellables)

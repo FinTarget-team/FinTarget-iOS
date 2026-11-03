@@ -22,7 +22,7 @@ struct WelcomeView: View {
                     .overlay {
                         Image(systemName: "pause.fill")
                             .font(.title)
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(Color(red: 0.20, green: 0.39, blue: 0.91))
                     }
                 
                 VStack(spacing: 8) {
@@ -51,7 +51,7 @@ struct WelcomeView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(Color.cyan)
+                        .background(Color(red: 0.20, green: 0.39, blue: 0.91))
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .padding(.horizontal, 24)

@@ -53,7 +53,6 @@ struct FinTargetApp: App {
         )
 
         // MARK: - SessionManager 초기화
-
         let keychain = KeychainService.shared
         let authService = AuthService()
 

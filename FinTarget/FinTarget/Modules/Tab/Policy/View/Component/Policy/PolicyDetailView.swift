@@ -43,15 +43,7 @@ struct PolicyDetailView: View {
                         .foregroundColor(.black)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    // 정책 설명은 상세 화면에서만 전체 표시
-                    Text(
-                        policy.description
-                        ?? "정책 설명이 제공되지 않았습니다."
-                    )
-                    .font(.PretendardMedium(size: 15))
-                    .foregroundColor(.gray)
-                    .lineSpacing(5)
-                    .fixedSize(horizontal: false, vertical: true)
+                    policyDescription
                 }
 
                 Divider()
@@ -235,6 +227,41 @@ struct PolicyDetailView: View {
 
     } // body 종료
 
+    // MARK: - 정책 설명
+    private var policyDescription: some View {
+
+        VStack(alignment: .leading, spacing: 16) {
+
+            if let description = policy.description,
+               !description.isEmpty {
+
+                let paragraphs = splitDescription(description)
+
+                ForEach(paragraphs.indices, id: \.self) { index in
+
+                    Text(paragraphs[index])
+                        .font(.PretendardRegular(size: 14))
+                        .foregroundColor(.secondary)
+                        .lineSpacing(6)
+                        .fixedSize(
+                            horizontal: false,
+                            vertical: true
+                        )
+                        .frame(
+                            maxWidth: .infinity,
+                            alignment: .leading
+                        )
+                }
+
+            } else {
+
+                Text("정책 설명이 없습니다.")
+                    .font(.PretendardRegular(size: 14))
+                    .foregroundColor(.gray)
+            }
+        }
+    }
+    
     // MARK: - 스크랩 여부
 
     private var isScrapped: Bool {
@@ -284,7 +311,7 @@ struct PolicyDetailView: View {
                 .foregroundColor(.gray)
 
             Text(value)
-                .font(.PretendardBold(size: 15))
+                .font(.PretendardMedium(size: 15))
                 .foregroundColor(.black)
                 .lineSpacing(5)
                 .multilineTextAlignment(.leading)
@@ -292,5 +319,66 @@ struct PolicyDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+    
+    // MARK: - 정책 설명 문단 분리
+    private func splitDescription(_ description: String) -> [String] {
 
+        var formatted = description
+
+        // 1. 원문자 범위 표현 보호
+        // 예: ①~⑤, ① ~ ⑤, ①부터 ⑤까지
+        let rangePattern =
+            #"([①②③④⑤⑥⑦⑧⑨⑩])\s*(?:~|∼|～|부터)\s*([①②③④⑤⑥⑦⑧⑨⑩])"#
+
+        let regex = try! NSRegularExpression(pattern: rangePattern)
+
+        let matches = regex.matches(
+            in: formatted,
+            range: NSRange(formatted.startIndex..., in: formatted)
+        )
+
+        // 범위 표현을 임시 문자열로 치환
+        var protectedRanges: [String] = []
+
+        for match in matches.reversed() {
+
+            guard let range = Range(match.range, in: formatted) else {
+                continue
+            }
+
+            let original = String(formatted[range])
+
+            let placeholder = "RANGEPROTECTED\(protectedRanges.count)END"
+
+            protectedRanges.append(original)
+
+            formatted.replaceSubrange(range, with: placeholder)
+        }
+
+        // 2. 실제 항목 번호 앞에만 줄바꿈 추가
+        formatted = formatted.replacingOccurrences(
+            of: #"(?<!^)(?=[①②③④⑤⑥⑦⑧⑨⑩])"#,
+            with: "\n",
+            options: .regularExpression
+        )
+
+        // 3. 보호한 범위 표현 복원
+        for (index, original) in protectedRanges.enumerated() {
+
+            let placeholder = "RANGEPROTECTED\(index)END"
+
+            formatted = formatted.replacingOccurrences(
+                of: placeholder,
+                with: original
+            )
+        }
+
+        // 4. 문단 분리
+        return formatted
+            .components(separatedBy: .newlines)
+            .map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            .filter { !$0.isEmpty }
+    }
 } // PolicyDetailView 종료

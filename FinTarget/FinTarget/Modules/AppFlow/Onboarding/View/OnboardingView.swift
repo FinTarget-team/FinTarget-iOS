@@ -41,7 +41,7 @@ struct OnboardingView: View {
                     currentStep: viewModel.stepData?.step ?? 1,
                     totalSteps: viewModel.stepData?.totalSteps ?? 7,
                     backAction: {
-                        // 이전 단계 이동 기능 추후 구현
+                        viewModel.goToPreviousStep()
                     }
                 )
             }

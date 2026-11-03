@@ -17,7 +17,7 @@ struct RunSimulationRequestDTO: Encodable {
 
 /// 시뮬레이션 실행 응답 DTO
 struct RunSimulationResponseDTO: Decodable {
-    let status: Int /// HTTP 상태 코드
+    let status: Int /// 응답 상태 코드
     let message: String /// 응답 메시지
     let data: SimulationDTO /// 시뮬레이션 결과
 }
@@ -26,7 +26,7 @@ struct RunSimulationResponseDTO: Decodable {
 
 /// 시뮬레이션 이력 조회 응답 DTO
 struct SimulationListResponseDTO: Decodable {
-    let status: Int /// HTTP 상태 코드
+    let status: Int /// 응답 상태 코드
     let message: String /// 응답 메시지
     let data: [SimulationDTO] /// 시뮬레이션 이력 목록
 }
@@ -46,9 +46,10 @@ struct SimulationDTO: Decodable, Identifiable {
     let optimisticCompletionDate: String /// 낙관적 예상 목표 달성일
     let pessimisticCompletionDate: String /// 비관적 예상 목표 달성일
 
-    let successProbability: Double /// 목표 달성 성공 확률
+    let successProbability: Double /// 기본 목표 달성 성공 확률
+    let policySuccessProbability: Double? /// 정책 적용 시 목표 달성 성공 확률
 
     let createdAt: String? /// 시뮬레이션 생성 시간
 
-    var id: String { simulationId } /// Identifiable ID
+    var id: String { simulationId }
 }
